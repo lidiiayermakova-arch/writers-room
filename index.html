@@ -1,0 +1,5452 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Writer's Room</title>
+  <style>
+    /* ==========================================================================
+       ДИЗАЙН-ТОКЕНЫ В СТИЛЕ OBSIDIAN MINIMAL
+       ========================================================================== */
+    :root {
+      --app-bg: #f5f5f4;
+      --tabbar-bg: #eaeae8;
+      --toolbar-bg: rgba(255, 255, 255, 0.88);
+      --surface-elevated: #ffffff;
+      --text-color: #1f1f1e;
+      --muted-text: #787774;
+      --page-bg: #ffffff;
+      --page-text: #1c1c1b;
+      --border-color: rgba(0, 0, 0, 0.08);
+      --hover-bg: rgba(0, 0, 0, 0.05);
+      --accent-color: #6c5ce7;
+      --accent-text: #ffffff;
+      --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+      --shadow-page: 0 4px 28px rgba(0, 0, 0, 0.06);
+      --stripe-width: 1px;
+      --stripe-offset: 70px;
+    }
+
+    body.theme-dark {
+      --app-bg: #191919;
+      --tabbar-bg: #141414;
+      --toolbar-bg: rgba(32, 32, 32, 0.9);
+      --surface-elevated: #262626;
+      --text-color: #dcddde;
+      --muted-text: #888888;
+      --page-bg: #202020;
+      --page-text: #e2e2e0;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --hover-bg: rgba(255, 255, 255, 0.06);
+      --accent-color: #7f6df2;
+      --accent-text: #ffffff;
+      --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.25);
+      --shadow-page: 0 8px 32px rgba(0, 0, 0, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--app-bg);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    /* ==========================================================================
+       ПАНЕЛЬ ВКЛАДОК (OBSIDIAN STYLE)
+       ========================================================================== */
+    .tab-bar {
+      height: 36px;
+      background-color: var(--tabbar-bg);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: flex-end;
+      padding: 0 12px;
+      gap: 4px;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .tabs-container {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      overflow-x: auto;
+      max-width: calc(100% - 40px);
+    }
+
+    .tabs-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab-item {
+      height: 30px;
+      min-width: 124px;
+      max-width: 210px;
+      padding: 0 10px 0 12px;
+      border-radius: 7px 7px 0 0;
+      background: transparent;
+      color: var(--muted-text);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-bottom: none;
+      transition: background-color 0.15s, color 0.15s;
+    }
+
+    .tab-item:hover {
+      background-color: var(--hover-bg);
+      color: var(--text-color);
+    }
+
+    .tab-item.active {
+      background-color: var(--toolbar-bg);
+      color: var(--text-color);
+      border-color: var(--border-color);
+      font-weight: 500;
+    }
+
+    .tab-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    .tab-title-input {
+      width: 100%;
+      background: var(--app-bg);
+      color: var(--text-color);
+      border: 1px solid var(--accent-color);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .tab-dirty-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--accent-color);
+      flex-shrink: 0;
+    }
+
+    .tab-close {
+      opacity: 0;
+      border: none;
+      background: transparent;
+      color: var(--muted-text);
+      font-size: 12px;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: opacity 0.12s, background-color 0.12s;
+    }
+
+    .tab-item:hover .tab-close,
+    .tab-item.active .tab-close {
+      opacity: 1;
+    }
+
+    .tab-close:hover {
+      background-color: var(--hover-bg);
+      color: var(--text-color);
+    }
+
+    .tab-add-btn {
+      height: 26px;
+      width: 26px;
+      margin-bottom: 3px;
+      border: none;
+      background: transparent;
+      color: var(--muted-text);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.15s, color 0.15s;
+    }
+
+    .tab-add-btn:hover {
+      background-color: var(--hover-bg);
+      color: var(--text-color);
+    }
+
+    /* ==========================================================================
+       ВЕРХНЯЯ ПАНЕЛЬ ИНСТРУМЕНТОВ
+       ========================================================================== */
+    .toolbar {
+      min-height: 44px;
+      background-color: var(--toolbar-bg);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 4px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      z-index: 20;
+      flex-shrink: 0;
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .sep {
+      width: 1px;
+      height: 16px;
+      background-color: var(--border-color);
+      margin: 0 6px;
+    }
+
+    .icon-btn {
+      background: transparent;
+      color: var(--text-color);
+      border: none;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background-color 0.15s, color 0.15s;
+    }
+
+    .icon-btn:hover {
+      background-color: var(--hover-bg);
+    }
+
+    .icon-btn:disabled {
+      opacity: 0.35;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .icon-btn.active-toggle {
+      background-color: var(--hover-bg);
+      color: var(--accent-color);
+    }
+
+    .text-style-btn {
+      font-family: Georgia, serif;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 5px 9px;
+    }
+
+    .btn-label {
+      font-size: 12.5px;
+      color: var(--muted-text);
+    }
+
+    .icon-btn:hover .btn-label {
+      color: var(--text-color);
+    }
+
+    /* Кнопка цвета выделенного текста */
+    .text-color-btn {
+      flex-direction: column;
+      gap: 1px;
+      padding: 4px 8px;
+      line-height: 1;
+    }
+
+    .text-color-letter {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .text-color-bar {
+      width: 13px;
+      height: 2.5px;
+      border-radius: 1px;
+      background-color: var(--accent-color);
+    }
+
+    .color-swatches-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+
+    .color-swatch-btn {
+      width: 100%;
+      height: 24px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+
+    .color-swatch-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ==========================================================================
+       СЕЛЕКТОР ТЕГОВ И ВЫПАДАЮЩЕЕ МЕНЮ
+       ========================================================================== */
+    .tag-dropdown {
+      position: relative;
+    }
+
+    .tag-trigger {
+      background: transparent;
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+
+    .tag-trigger:hover {
+      background-color: var(--hover-bg);
+    }
+
+    .tag-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .tag-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      min-width: 220px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-color);
+      border-radius: 9px;
+      box-shadow: var(--shadow-lg);
+      padding: 5px;
+      z-index: 60;
+    }
+
+    .dropdown-item {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text-color);
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .dropdown-item:hover {
+      background-color: var(--hover-bg);
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background-color: var(--border-color);
+      margin: 5px 0;
+    }
+
+    .dropdown-action {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--muted-text);
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .dropdown-action:hover {
+      background-color: var(--hover-bg);
+      color: var(--text-color);
+    }
+
+    /* ==========================================================================
+       ПОПОВЕРЫ (ТИПОГРАФИКА, ЦВЕТ ТЕКСТА И ОФОРМЛЕНИЕ)
+       ========================================================================== */
+    .popover-wrapper {
+      position: relative;
+    }
+
+    .popover {
+      position: absolute;
+      top: calc(100% + 8px);
+      width: 285px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      box-shadow: var(--shadow-lg);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      z-index: 60;
+      font-size: 12.5px;
+    }
+
+    #typography-popover,
+    #text-color-popover {
+      left: 0;
+    }
+
+    #theme-popover {
+      right: 0;
+    }
+
+    .popover-header {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted-text);
+    }
+
+    .popover-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ui-select,
+    .ui-input {
+      background: var(--app-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .ui-select:focus,
+    .ui-input:focus {
+      border-color: var(--accent-color);
+    }
+
+    /* Степперы (− / +) */
+    .stepper-control {
+      display: inline-flex;
+      align-items: center;
+      background: var(--app-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .stepper-btn {
+      width: 26px;
+      height: 24px;
+      background: transparent;
+      border: none;
+      color: var(--text-color);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.12s;
+    }
+
+    .stepper-btn:hover {
+      background: var(--hover-bg);
+    }
+
+    .stepper-control .ui-select.compact,
+    .stepper-control .ui-input.compact {
+      border: none;
+      border-left: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+      border-radius: 0;
+      text-align: center;
+      padding: 3px 4px;
+    }
+
+    .stepper-control .ui-input.compact {
+      width: 48px;
+    }
+
+    /* Переключатель темы */
+    .theme-switch-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: var(--app-bg);
+      padding: 3px;
+      border-radius: 8px;
+    }
+
+    .theme-mode-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted-text);
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .theme-mode-btn.active {
+      background: var(--surface-elevated);
+      color: var(--text-color);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
+    }
+
+    /* ==========================================================================
+       КОМПОНОВКА ОСНОВНОЙ ОБЛАСТИ: ПАНЕЛЬ РЕВЬЮ СЛЕВА + ЛИСТ ДОКУМЕНТА СПРАВА
+       ========================================================================== */
+    .main-container {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .review-sidebar {
+      width: 270px;
+      background-color: var(--tabbar-bg);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 16px 12px;
+      gap: 16px;
+      flex-shrink: 0;
+      user-select: none;
+      transition: width 0.2s ease, padding 0.2s ease, opacity 0.2s ease;
+    }
+
+    .review-sidebar.collapsed {
+      width: 0;
+      padding-left: 0;
+      padding-right: 0;
+      border-right: none;
+      opacity: 0;
+      overflow: hidden;
+    }
+
+    .review-group {
+      position: relative;
+      padding-left: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .review-group::before {
+      content: '';
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      bottom: 2px;
+      width: 3px;
+      border-radius: 2px;
+      background-color: var(--group-color, var(--muted-text));
+    }
+
+    .review-group-header {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--muted-text);
+      padding: 2px 6px 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .review-group-header:hover {
+      color: var(--text-color);
+    }
+
+    .review-group-items {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .review-group.folded .review-group-items {
+      display: none;
+    }
+
+    .review-item {
+      background: transparent;
+      border: none;
+      color: var(--text-color);
+      font-size: 12px;
+      padding: 5px 6px;
+      border-radius: 5px;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      opacity: 0.88;
+      transition: background-color 0.12s, opacity 0.12s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .review-item:hover {
+      background-color: var(--hover-bg);
+      opacity: 1;
+    }
+
+    .review-item-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    .review-instance-badge {
+      font-size: 10px;
+      color: var(--muted-text);
+      background: var(--hover-bg);
+      padding: 1px 5px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    @keyframes highlightFlash {
+      0% { background-color: rgba(127, 109, 242, 0.28); }
+      100% { background-color: transparent; }
+    }
+
+    .flash-highlight {
+      animation: highlightFlash 1.2s ease-out;
+      border-radius: 4px;
+    }
+
+    .workspace {
+      flex: 1;
+      overflow-y: auto;
+      padding: 36px 24px 90px;
+      display: flex;
+      justify-content: center;
+      scroll-behavior: smooth;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 780px;
+      min-height: 1040px;
+      height: fit-content;
+      background-color: var(--page-bg);
+      color: var(--page-text);
+      padding: 68px 80px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-page);
+      outline: none;
+      font-size: 16px;
+      line-height: 1.65;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 36px 24px;
+      }
+    }
+
+    .page p,
+    .page > div:not(.doc-instance),
+    .page h1,
+    .page h2,
+    .page h3 {
+      position: relative;
+      margin-bottom: 14px;
+      padding-left: 0;
+    }
+
+    .page h1 {
+      font-size: 1.65em;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-top: 10px;
+      margin-bottom: 18px;
+    }
+
+    .page h2 {
+      font-size: 1.32em;
+      font-weight: 600;
+      line-height: 1.35;
+      margin-top: 8px;
+      margin-bottom: 15px;
+    }
+
+    .page h3 {
+      font-size: 1.12em;
+      font-weight: 600;
+      line-height: 1.4;
+      margin-top: 6px;
+      margin-bottom: 14px;
+    }
+
+    /* ==========================================================================
+       СМЫСЛОВОЙ ИНСТАНС (ЮНИТ ИЗ НЕСКОЛЬКИХ АБЗАЦЕВ / ДИАЛОГОВ)
+       ========================================================================== */
+    .page .doc-instance {
+      position: relative;
+      margin-top: 24px;
+      margin-bottom: 24px;
+      padding: 0;
+    }
+
+    .page .doc-instance:first-child {
+      margin-top: 0;
+    }
+
+    .page .doc-instance > p:last-child,
+    .page .doc-instance > div:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Тонкая статичная полоса тега слева от абзаца или целого инстанса */
+    .page [data-tag-id]::before {
+      content: '';
+      position: absolute;
+      left: calc(-1 * (var(--stripe-offset, 70px) + var(--stripe-width, 1px)));
+      top: 2px;
+      bottom: 2px;
+      width: var(--stripe-width, 1px);
+      border-radius: 1px;
+      background-color: var(--tag-color);
+      cursor: pointer;
+    }
+
+    .page img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 6px;
+      margin: 16px 0;
+      display: block;
+    }
+
+    /* ==========================================================================
+       ВИДЖЕТ ПИКСЕЛЬНОГО ПОМОЩНИКА И ГРАММОФОНА
+       ========================================================================== */
+    .companion-widget {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      width: 292px;
+      background-color: #b7c2b3;
+      color: #2f332c;
+      border: 2px solid #484f44;
+      border-radius: 14px;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.32), 0 2px 8px rgba(0, 0, 0, 0.14);
+      z-index: 45;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      user-select: none;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    body.theme-dark .companion-widget {
+      background-color: #2a3029;
+      color: #d6dfd2;
+      border-color: #465044;
+    }
+
+    .companion-widget.scene-mistyForest {
+      background-color: #b8c2c7;
+      color: #262b33;
+      border-color: #49525e;
+    }
+
+    body.theme-dark .companion-widget.scene-mistyForest {
+      background-color: #242933;
+      color: #cfd7e3;
+      border-color: #454e5e;
+    }
+
+    .companion-widget.scene-mountainRidge {
+      background-color: #b7ccd9;
+      color: #1f3340;
+      border-color: #486475;
+    }
+
+    body.theme-dark .companion-widget.scene-mountainRidge {
+      background-color: #1e2d38;
+      color: #cde0eb;
+      border-color: #3c5669;
+    }
+
+    .companion-widget.scene-skyColonnade {
+      background-color: #b3d4fa;
+      color: #173459;
+      border-color: #3f6da3;
+    }
+
+    body.theme-dark .companion-widget.scene-skyColonnade {
+      background-color: #192b47;
+      color: #d4e6fc;
+      border-color: #365787;
+    }
+
+    .companion-widget.scene-sunsetCabin {
+      background-color: #e3b8ba;
+      color: #362229;
+      border-color: #6e4852;
+    }
+
+    body.theme-dark .companion-widget.scene-sunsetCabin {
+      background-color: #2e2026;
+      color: #f0d5d8;
+      border-color: #5c3f49;
+    }
+
+    .companion-widget.hidden {
+      display: none !important;
+    }
+
+    .companion-header {
+      padding: 9px 12px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11.5px;
+      position: relative;
+      z-index: 3;
+    }
+
+    .companion-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .companion-title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .companion-status-badge {
+      font-size: 11px;
+      opacity: 0.78;
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .companion-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .companion-icon-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: inherit;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0.78;
+      transition: background-color 0.15s, opacity 0.15s;
+    }
+
+    .companion-icon-btn:hover {
+      background: rgba(0, 0, 0, 0.08);
+      opacity: 1;
+    }
+
+    body.theme-dark .companion-icon-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      opacity: 1;
+    }
+
+    .companion-settings-popover {
+      position: absolute;
+      top: 38px;
+      right: 10px;
+      width: 210px;
+      background-color: var(--surface-elevated);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      box-shadow: var(--shadow-lg);
+      padding: 6px;
+      z-index: 25;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 12px;
+    }
+
+    .companion-settings-title {
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted-text);
+      padding: 4px 8px 3px;
+    }
+
+    .scene-option-btn {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text-color);
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      text-align: left;
+      transition: background-color 0.12s;
+    }
+
+    .scene-option-btn:hover {
+      background-color: var(--hover-bg);
+    }
+
+    .scene-option-btn.active {
+      font-weight: 600;
+      color: var(--accent-color);
+    }
+
+    .scene-check {
+      font-size: 11px;
+    }
+
+    .companion-canvas-wrap {
+      width: 100%;
+      height: 162px;
+      position: relative;
+      display: block;
+    }
+
+    #companion-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    .gramophone-drawer {
+      background-color: rgba(255, 255, 255, 0.16);
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      padding: 8px 11px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    body.theme-dark .gramophone-drawer {
+      background-color: rgba(0, 0, 0, 0.22);
+      border-top-color: rgba(255, 255, 255, 0.07);
+    }
+
+    .gramophone-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .gramophone-transport-inline {
+      display: flex;
+      align-items: center;
+      gap: 1px;
+      flex-shrink: 0;
+    }
+
+    .player-mini-btn {
+      width: 22px;
+      height: 22px;
+      border: none;
+      background: transparent;
+      color: inherit;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0.78;
+      transition: background-color 0.14s, opacity 0.14s;
+    }
+
+    .player-mini-btn:hover {
+      background: rgba(0, 0, 0, 0.08);
+      opacity: 1;
+    }
+
+    body.theme-dark .player-mini-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      opacity: 1;
+    }
+
+    .gramophone-now-playing {
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      opacity: 0.92;
+    }
+
+    .gramophone-add-btn {
+      border: none;
+      background: transparent;
+      color: inherit;
+      border-radius: 5px;
+      padding: 3px 6px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      opacity: 0.78;
+      transition: background-color 0.14s, opacity 0.14s;
+    }
+
+    .gramophone-add-btn:hover {
+      background: rgba(0, 0, 0, 0.08);
+      opacity: 1;
+    }
+
+    body.theme-dark .gramophone-add-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      opacity: 1;
+    }
+
+    .gramophone-sliders-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-variant-numeric: tabular-nums;
+      opacity: 0.85;
+    }
+
+    .gramophone-range {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(0, 0, 0, 0.22);
+      outline: none;
+      cursor: pointer;
+    }
+
+    body.theme-dark .gramophone-range {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .gramophone-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: currentColor;
+      cursor: pointer;
+    }
+
+    .gramophone-range::-moz-range-thumb {
+      width: 9px;
+      height: 9px;
+      border: none;
+      border-radius: 50%;
+      background: currentColor;
+      cursor: pointer;
+    }
+
+    .gramophone-seek {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .gramophone-volume {
+      width: 44px;
+      flex-shrink: 0;
+    }
+
+    .volume-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 2px;
+      flex-shrink: 0;
+    }
+
+    .playlist-container {
+      max-height: 86px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      margin-top: 2px;
+    }
+
+    .playlist-container::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    .playlist-container::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.18);
+      border-radius: 2px;
+    }
+
+    body.theme-dark .playlist-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .playlist-empty {
+      text-align: center;
+      opacity: 0.65;
+      padding: 6px 4px;
+      font-size: 10.5px;
+    }
+
+    .playlist-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 4px 6px;
+      border-radius: 5px;
+      border: none;
+      outline: none;
+      background: transparent;
+      cursor: pointer;
+      opacity: 0.78;
+      transition: background-color 0.12s, opacity 0.12s;
+    }
+
+    .playlist-item:hover {
+      background: rgba(0, 0, 0, 0.06);
+      opacity: 1;
+    }
+
+    body.theme-dark .playlist-item:hover {
+      background: rgba(255, 255, 255, 0.07);
+      opacity: 1;
+    }
+
+    .playlist-item.active {
+      font-weight: 600;
+      opacity: 1;
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    body.theme-dark .playlist-item.active {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .playlist-item-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .playlist-item-del {
+      border: none;
+      background: transparent;
+      color: inherit;
+      opacity: 0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px;
+      border-radius: 4px;
+      transition: opacity 0.12s;
+    }
+
+    .playlist-item:hover .playlist-item-del {
+      opacity: 0.65;
+    }
+
+    .playlist-item-del:hover {
+      opacity: 1 !important;
+    }
+
+    /* ==========================================================================
+       КАСТОМНОЕ КОНТЕКСТНОЕ МЕНЮ (ПКМ)
+       ========================================================================== */
+    .context-menu {
+      position: fixed;
+      min-width: 235px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-color);
+      border-radius: 9px;
+      box-shadow: var(--shadow-lg);
+      padding: 5px;
+      z-index: 200;
+      font-size: 13px;
+    }
+
+    .ctx-section-title {
+      font-size: 11px;
+      color: var(--muted-text);
+      padding: 4px 10px 3px;
+      font-weight: 500;
+    }
+
+    .ctx-item {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text-color);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .ctx-item:hover {
+      background-color: var(--hover-bg);
+    }
+
+    .ctx-item-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .ctx-shortcut {
+      font-size: 11px;
+      color: var(--muted-text);
+    }
+
+    .ctx-inline-colors {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px 6px;
+    }
+
+    .ctx-color-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: transform 0.12s;
+    }
+
+    .ctx-color-dot:hover {
+      transform: scale(1.18);
+    }
+
+    .ctx-color-reset {
+      margin-left: auto;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--muted-text);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .ctx-color-reset:hover {
+      color: var(--text-color);
+      background: var(--hover-bg);
+    }
+
+    /* ==========================================================================
+       ВСПЛЫВАЮЩАЯ ПОДСКАЗКА И УВЕДОМЛЕНИЯ
+       ========================================================================== */
+    .tooltip {
+      position: fixed;
+      background: #141414;
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      pointer-events: none;
+      z-index: 1000;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: var(--surface-elevated);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      box-shadow: var(--shadow-lg);
+      z-index: 500;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ==========================================================================
+       МОДАЛЬНЫЕ ОКНА
+       ========================================================================== */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 150;
+    }
+
+    .modal-content {
+      background: var(--surface-elevated);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .manager-modal {
+      width: 460px;
+      max-width: 92vw;
+    }
+
+    .confirm-modal {
+      width: 390px;
+      max-width: 92vw;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3,
+    .confirm-modal h3 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .modal-desc {
+      font-size: 13px;
+      color: var(--muted-text);
+      line-height: 1.5;
+    }
+
+    .template-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--app-bg);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 12.5px;
+    }
+
+    .tags-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .tag-edit-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: var(--app-bg);
+      border: 1px solid transparent;
+      transition: border-color 0.15s, opacity 0.15s;
+    }
+
+    .tag-edit-row.dragging {
+      opacity: 0.45;
+      border-color: var(--accent-color);
+    }
+
+    .tag-edit-row.drag-over {
+      border-top: 2px solid var(--accent-color);
+    }
+
+    .drag-handle {
+      color: var(--muted-text);
+      cursor: grab;
+      font-size: 14px;
+      line-height: 1;
+      padding: 2px;
+      user-select: none;
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .tag-edit-row input[type="text"] {
+      flex: 1;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-color);
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .tag-edit-row input[type="text"]:focus {
+      background: var(--surface-elevated);
+      border-color: var(--border-color);
+      outline: none;
+    }
+
+    input[type="color"] {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .add-tag-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .add-tag-row .ui-input {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+
+    .merge-box {
+      border-top: 1px solid var(--border-color);
+      padding-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .merge-title {
+      font-size: 12px;
+      color: var(--muted-text);
+    }
+
+    .merge-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .merge-controls .ui-select {
+      flex: 1;
+    }
+
+    .stripe-settings-box {
+      border-top: 1px solid var(--border-color);
+      padding-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .slider-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slider-control input[type="range"] {
+      width: 120px;
+      accent-color: var(--accent-color);
+      cursor: pointer;
+    }
+
+    .slider-val {
+      font-size: 12px;
+      color: var(--muted-text);
+      min-width: 38px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .confirm-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .accent-btn {
+      background: var(--accent-color);
+      color: var(--accent-text);
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .ghost-btn {
+      background: transparent;
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .ghost-btn:hover {
+      background: var(--hover-bg);
+    }
+
+    .danger-btn {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .danger-btn:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    .full-width {
+      width: 100%;
+    }
+
+    /* ==========================================================================
+       РЕЖИМ ФОКУСА (КОНЦЕНТРАЦИЯ НА ТЕКСТЕ)
+       ========================================================================== */
+    body.focus-mode .tab-bar,
+    body.focus-mode .toolbar > .toolbar-group:not(:last-child),
+    body.focus-mode #btn-theme-settings,
+    body.focus-mode .review-sidebar {
+      display: none !important;
+    }
+
+    body.focus-mode .toolbar {
+      justify-content: flex-end;
+      background-color: transparent;
+      border-bottom-color: transparent;
+      backdrop-filter: none;
+    }
+
+    body.focus-mode .workspace {
+      padding-top: 16px;
+    }
+  </style>
+</head>
+<body class="theme-dark">
+
+  <!-- Панель вкладок в стиле Obsidian -->
+  <div class="tab-bar" id="tab-bar">
+    <div class="tabs-container" id="tabs-container"></div>
+    <button id="btn-new-tab" class="tab-add-btn" title="Новая вкладка">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Верхняя панель инструментов -->
+  <header class="toolbar">
+    <!-- Файловые операции и единое меню сохранения -->
+    <div class="toolbar-group">
+      <button id="btn-new" class="icon-btn" title="Создать в новой вкладке">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="12" y1="18" x2="12" y2="12"></line>
+          <line x1="9" y1="15" x2="15" y2="15"></line>
+        </svg>
+      </button>
+      <button id="btn-open" class="icon-btn" title="Открыть файл (.tdoc / .txt / .html)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </button>
+      <input type="file" id="open-file-input" accept=".tdoc,.json,.txt,.html" hidden>
+
+      <!-- Объединённая кнопка «Сохранить» с выбором формата (по умолчанию .txt) -->
+      <div class="popover-wrapper">
+        <button id="btn-save" class="icon-btn" title="Сохранить документ (выбор формата, по умолчанию .txt)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span class="btn-label">Сохранить</span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity: 0.65;">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <div id="save-dropdown-menu" class="tag-dropdown-menu hidden" style="min-width: 265px;">
+          <div class="ctx-section-title">Формат сохранения</div>
+          <button id="btn-save-txt" class="dropdown-item" style="justify-content: space-between;">
+            <span style="display: inline-flex; align-items: center; gap: 9px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="8" y1="13" x2="16" y2="13"></line>
+                <line x1="8" y1="17" x2="13" y2="17"></line>
+              </svg>
+              <span><b>Чистый текст (.txt)</b></span>
+            </span>
+            <span class="ctx-shortcut">по умолч.</span>
+          </button>
+          <button id="btn-save-tdoc" class="dropdown-item" style="justify-content: space-between;">
+            <span style="display: inline-flex; align-items: center; gap: 9px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              <span>Проект с тегами (.tdoc)</span>
+            </span>
+            <span class="ctx-shortcut">теги</span>
+          </button>
+          <button id="btn-save-rtf" class="dropdown-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <path d="M9 15h6"></path>
+              <path d="M12 11v8"></path>
+            </svg>
+            <span>Для Google Docs / Word (.rtf)</span>
+          </button>
+          <button id="btn-save-html" class="dropdown-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+              <polyline points="16 18 22 12 16 6"></polyline>
+              <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+            <span>Чистая вёрстка (.html)</span>
+          </button>
+          <div class="dropdown-divider"></div>
+          <button id="btn-copy-rich" class="dropdown-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span>Копировать для Google Docs</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Центральные инструменты: Типографика (Aa) -> B/I/U + Цвет текста -> Теги + Инстанс -> Упорядочить -> История -> Панель ревью -->
+    <div class="toolbar-group center-tools">
+      <div class="popover-wrapper">
+        <button id="btn-typography" class="icon-btn text-style-btn" title="Шрифт, заголовки, размер и отступы">
+          <span>Aa</span>
+        </button>
+
+        <div id="typography-popover" class="popover hidden">
+          <div class="popover-header">Типографика</div>
+          <div class="popover-row">
+            <span>Стиль абзаца</span>
+            <select id="block-format" class="ui-select">
+              <option value="P" selected>Обычный текст</option>
+              <option value="H1">Заголовок 1</option>
+              <option value="H2">Заголовок 2</option>
+              <option value="H3">Заголовок 3</option>
+            </select>
+          </div>
+
+          <div class="popover-row">
+            <span>Шрифт</span>
+            <select id="font-family" class="ui-select">
+              <option value="'Georgia', serif">Georgia</option>
+              <option value="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" selected>Segoe UI / Sans</option>
+              <option value="'Times New Roman', serif">Times New Roman</option>
+              <option value="'Consolas', 'Courier New', monospace">Monospace</option>
+            </select>
+          </div>
+
+          <div class="popover-row">
+            <span>Размер текста</span>
+            <div class="stepper-control">
+              <button id="btn-font-dec" class="stepper-btn" title="Уменьшить размер">−</button>
+              <select id="font-size" class="ui-select compact">
+                <option value="12">12 px</option>
+                <option value="14">14 px</option>
+                <option value="16" selected>16 px</option>
+                <option value="18">18 px</option>
+                <option value="20">20 px</option>
+                <option value="22">22 px</option>
+                <option value="24">24 px</option>
+                <option value="28">28 px</option>
+                <option value="32">32 px</option>
+              </select>
+              <button id="btn-font-inc" class="stepper-btn" title="Увеличить размер">+</button>
+            </div>
+          </div>
+
+          <div class="popover-row">
+            <span>Интервал</span>
+            <select id="line-height" class="ui-select">
+              <option value="1.35">1.35</option>
+              <option value="1.65" selected>1.65</option>
+              <option value="1.9">1.9</option>
+            </select>
+          </div>
+
+          <div class="popover-row">
+            <span>Отступ абзаца</span>
+            <div class="stepper-control">
+              <button id="btn-indent-dec" class="stepper-btn" title="Уменьшить отступ">−</button>
+              <input type="number" id="para-indent" class="ui-input compact" value="0" min="0" max="120" step="8">
+              <button id="btn-indent-inc" class="stepper-btn" title="Увеличить отступ">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-bold" class="icon-btn" title="Жирный (Ctrl+B)"><b>B</b></button>
+      <button id="btn-italic" class="icon-btn" title="Курсив (Ctrl+I)"><i>I</i></button>
+      <button id="btn-underline" class="icon-btn" title="Подчёркнутый (Ctrl+U)"><u>U</u></button>
+
+      <!-- Цвет выделенного фрагмента текста -->
+      <div class="popover-wrapper">
+        <button id="btn-text-color" class="icon-btn text-color-btn" title="Цвет выделенного текста">
+          <span class="text-color-letter">A</span>
+          <span id="text-color-indicator" class="text-color-bar"></span>
+        </button>
+
+        <div id="text-color-popover" class="popover hidden" style="width: 245px;">
+          <div class="popover-header">Цвет выделенного текста</div>
+          <div id="color-swatches" class="color-swatches-grid"></div>
+          <div class="popover-row">
+            <span>Свой цвет</span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <input type="color" id="selection-color-picker" value="#7f6df2">
+              <button id="btn-apply-custom-color" class="ghost-btn">Применить</button>
+            </div>
+          </div>
+          <button id="btn-clear-text-color" class="ghost-btn full-width">Сбросить цвет текста</button>
+        </div>
+      </div>
+
+      <button id="btn-image" class="icon-btn" title="Вставить изображение">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21 15 16 10 5 21"></polyline>
+        </svg>
+      </button>
+      <input type="file" id="image-input" accept="image/*" hidden>
+
+      <span class="sep"></span>
+
+      <!-- Выбор тега -->
+      <div class="tag-dropdown" id="tag-dropdown">
+        <button id="tag-dropdown-btn" class="tag-trigger" title="Назначить тег абзацу или инстансу">
+          <span class="tag-dot" id="current-tag-dot" style="background: transparent; border: 1px dashed currentColor;"></span>
+          <span id="current-tag-label">Без тега</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <div class="tag-dropdown-menu hidden" id="tag-dropdown-menu">
+          <div id="tag-options-list"></div>
+          <div class="dropdown-divider"></div>
+          <button id="btn-open-manager" class="dropdown-action">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            Настроить теги...
+          </button>
+        </div>
+      </div>
+
+      <!-- Кнопка объединения выделенных абзацев/диалогов в единый инстанс -->
+      <button id="btn-wrap-instance" class="icon-btn" title="Обернуть выделенные абзацы в единый инстанс (юнит)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3"></path>
+          <path d="M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"></path>
+          <line x1="8" y1="9" x2="16" y2="9"></line>
+          <line x1="8" y1="15" x2="16" y2="15"></line>
+        </svg>
+        <span class="btn-label">Инстанс</span>
+      </button>
+
+      <button id="btn-sort-tags" class="icon-btn" title="Упорядочить фрагменты по тегам">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="15" y2="12"></line>
+          <line x1="3" y1="18" x2="9" y2="18"></line>
+        </svg>
+        <span class="btn-label">Упорядочить</span>
+      </button>
+
+      <!-- Стрелочки отмены/повтора (10 шагов) -->
+      <button id="btn-undo" class="icon-btn" title="Отменить действие (Ctrl+Z)" disabled>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 14 4 9 9 4"></polyline>
+          <path d="M20 20v-7a4 4 0 0 0-4-4H4"></path>
+        </svg>
+      </button>
+      <button id="btn-redo" class="icon-btn" title="Повторить действие (Ctrl+Y)" disabled>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 14 20 9 15 4"></polyline>
+          <path d="M4 20v-7a4 4 0 0 1 4-4h12"></path>
+        </svg>
+      </button>
+
+      <!-- Кнопка открытия/закрытия боковой панели ревью (по умолчанию свёрнута) -->
+      <button id="btn-toggle-review" class="icon-btn" title="Панель ревью тегов">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Помощник, режим фокуса и настройка темы (крайняя справа) -->
+    <div class="toolbar-group popover-wrapper">
+      <button id="btn-toggle-companion" class="icon-btn active-toggle" title="Окно помощника и граммофона">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+          <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+          <path d="M2 2l7.586 7.586"></path>
+          <circle cx="11" cy="11" r="2"></circle>
+        </svg>
+      </button>
+
+      <button id="btn-focus-mode" class="icon-btn" title="Режим фокуса (скрыть лишние панели)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"></circle>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+      </button>
+
+      <button id="btn-theme-settings" class="icon-btn" title="Тема и цвета оформления">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
+          <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
+          <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
+          <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
+          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path>
+        </svg>
+      </button>
+
+      <div id="theme-popover" class="popover hidden">
+        <div class="popover-header">Оформление</div>
+        <div class="theme-switch-group">
+          <button id="btn-set-light" class="theme-mode-btn">☀️ Светлая</button>
+          <button id="btn-set-dark" class="theme-mode-btn active">🌙 Тёмная</button>
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="popover-row">
+          <span>Цвет листа</span>
+          <input type="color" id="page-bg-picker" value="#202020">
+        </div>
+        <div class="popover-row">
+          <span>Цвет текста</span>
+          <input type="color" id="page-text-picker" value="#e2e2e0">
+        </div>
+        <div class="popover-row">
+          <span>Фон рабочего стола</span>
+          <input type="color" id="app-bg-picker" value="#191919">
+        </div>
+        <div class="popover-row">
+          <span>Акцентный цвет</span>
+          <input type="color" id="accent-picker" value="#7f6df2">
+        </div>
+        <button id="btn-reset-theme" class="ghost-btn full-width">Сбросить цвета темы</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Основная рабочая область: Панель ревью СЛЕВА + Лист документа СПРАВА -->
+  <div class="main-container">
+    <aside id="review-sidebar" class="review-sidebar collapsed" aria-label="Панель ревью тегов"></aside>
+
+    <main class="workspace" id="workspace">
+      <div id="editor" class="page" contenteditable="true" spellcheck="true" lang="ru"></div>
+    </main>
+
+    <!-- Виджет «Пиксельный помощник и граммофон» -->
+    <section id="companion-widget" class="companion-widget" aria-label="Окно помощника">
+      <div class="companion-header">
+        <div class="companion-meta">
+          <div class="companion-title-row">
+            <span>Little Writer</span>
+            <span id="companion-state-label" class="companion-status-badge">· в задумчивости</span>
+          </div>
+        </div>
+        <div class="companion-controls">
+          <button id="btn-companion-menu" class="companion-icon-btn" title="Настройки дизайна виджета">≡</button>
+          <button id="btn-close-companion" class="companion-icon-btn" title="Скрыть помощника">✕</button>
+        </div>
+      </div>
+
+      <!-- Меню выбора дизайна виджета -->
+      <div id="companion-settings-popover" class="companion-settings-popover hidden">
+        <div class="companion-settings-title">Оформление сцены</div>
+        <button class="scene-option-btn active" data-scene="study">
+          <span>Кабинет</span>
+          <span class="scene-check">✓</span>
+        </button>
+        <button class="scene-option-btn" data-scene="mistyForest">
+          <span>Туманный лес</span>
+          <span class="scene-check"></span>
+        </button>
+        <button class="scene-option-btn" data-scene="mountainRidge">
+          <span>Горный хребет</span>
+          <span class="scene-check"></span>
+        </button>
+        <button class="scene-option-btn" data-scene="skyColonnade">
+          <span>Небесная колоннада</span>
+          <span class="scene-check"></span>
+        </button>
+        <button class="scene-option-btn" data-scene="sunsetCabin">
+          <span>Закат у хижины</span>
+          <span class="scene-check"></span>
+        </button>
+        <div class="dropdown-divider"></div>
+        <button id="btn-toggle-gramophone" class="scene-option-btn">
+          <span>Плейлист граммофона</span>
+        </button>
+      </div>
+
+      <div class="companion-canvas-wrap">
+        <canvas id="companion-canvas" width="288" height="162"></canvas>
+      </div>
+
+      <!-- Выдвижная панель граммофона (плейлист) -->
+      <div id="gramophone-drawer" class="gramophone-drawer">
+        <div class="gramophone-top">
+          <div class="gramophone-transport-inline">
+            <button id="btn-audio-prev" class="player-mini-btn" title="Предыдущий трек">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                <line x1="5" y1="19" x2="5" y2="5"></line>
+              </svg>
+            </button>
+            <button id="btn-audio-play" class="player-mini-btn" title="Воспроизвести / Пауза">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="6 4 20 12 6 20 6 4"></polygon>
+              </svg>
+            </button>
+            <button id="btn-audio-next" class="player-mini-btn" title="Следующий трек">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                <line x1="19" y1="5" x2="19" y2="19"></line>
+              </svg>
+            </button>
+          </div>
+          <span id="gramophone-track-title" class="gramophone-now-playing">Плейлист пуст</span>
+          <button id="btn-add-tracks" class="gramophone-add-btn" title="Добавить аудиофайлы с компьютера">+ Треки</button>
+          <input type="file" id="audio-files-input" accept="audio/*" multiple hidden>
+        </div>
+
+        <div class="gramophone-sliders-row">
+          <span id="audio-current-time">0:00</span>
+          <input type="range" id="audio-seek-bar" class="gramophone-range gramophone-seek" min="0" max="100" value="0" step="0.1" title="Позиция трека">
+          <span id="audio-duration">0:00</span>
+          <div class="volume-inline" title="Громкость">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            <input type="range" id="audio-volume-bar" class="gramophone-range gramophone-volume" min="0" max="1" step="0.02" value="0.7">
+          </div>
+        </div>
+
+        <div id="gramophone-playlist" class="playlist-container">
+          <div class="playlist-empty">Нажмите «+ Треки», чтобы выбрать музыку с компьютера</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Кастомное контекстное меню ПКМ -->
+  <div id="custom-context-menu" class="context-menu hidden"></div>
+
+  <!-- Модальное окно управления тегами (с перетаскиванием порядка) -->
+  <div id="tag-manager-modal" class="modal hidden">
+    <div class="modal-content manager-modal">
+      <div class="modal-header">
+        <h3>Управление тегами</h3>
+        <button id="btn-close-manager" class="icon-btn">✕</button>
+      </div>
+
+      <div class="template-bar">
+        <label>Набор:
+          <select id="tag-preset-selector" class="ui-select">
+            <option value="custom">Пользовательский (текущий)</option>
+            <option value="global">Общий шаблон (все проекты)</option>
+          </select>
+        </label>
+        <button id="btn-save-as-global" class="ghost-btn">Сохранить как общий</button>
+      </div>
+
+      <div class="tags-list" id="manager-tags-list"></div>
+
+      <div class="add-tag-row">
+        <input type="color" id="new-tag-color" value="#7f6df2" title="Цвет тега">
+        <input type="text" id="new-tag-name" class="ui-input" placeholder="Название тега (необязательно)">
+        <button id="btn-add-tag" class="accent-btn">Добавить</button>
+      </div>
+
+      <div class="merge-box">
+        <span class="merge-title">Объединить теги:</span>
+        <div class="merge-controls">
+          <select id="merge-source" class="ui-select"></select>
+          <span>→</span>
+          <select id="merge-target" class="ui-select"></select>
+          <button id="btn-merge-tags" class="ghost-btn">Объединить</button>
+        </div>
+      </div>
+
+      <!-- Настройка внешнего вида полосы тега -->
+      <div class="stripe-settings-box">
+        <span class="merge-title">Отображение полосы тега:</span>
+        <div class="popover-row">
+          <span>Ширина полосы</span>
+          <div class="slider-control">
+            <input type="range" id="stripe-width-slider" min="1" max="5" step="1" value="1">
+            <span id="stripe-width-val" class="slider-val">1 px</span>
+          </div>
+        </div>
+        <div class="popover-row">
+          <span>Расстояние до текста</span>
+          <div class="slider-control">
+            <input type="range" id="stripe-offset-slider" min="10" max="70" step="2" value="70">
+            <span id="stripe-offset-val" class="slider-val">70 px</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Шаг 1 при закрытии: Сохранение документа -->
+  <div id="unsaved-modal" class="modal hidden">
+    <div class="modal-content confirm-modal">
+      <h3>Сохранить изменения?</h3>
+      <p id="unsaved-message" class="modal-desc">В файле есть несохранённые изменения.</p>
+      <div class="confirm-actions">
+        <button id="btn-unsaved-cancel" class="ghost-btn">Отмена</button>
+        <button id="btn-unsaved-discard" class="danger-btn">Не сохранять</button>
+        <button id="btn-unsaved-save" class="accent-btn">Сохранить (.txt)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Шаг 2 при закрытии: Подтверждение завершения работы с файлом -->
+  <div id="confirm-close-step2-modal" class="modal hidden">
+    <div class="modal-content confirm-modal">
+      <h3>Подтверждение закрытия</h3>
+      <p id="step2-message" class="modal-desc">Вы уверены, что хотите завершить работу и закрыть этот файл?</p>
+      <div class="confirm-actions">
+        <button id="btn-step2-stay" class="ghost-btn">Вернуться к работе</button>
+        <button id="btn-step2-confirm" class="accent-btn">Да, закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Подтверждение выхода из режима фокуса -->
+  <div id="focus-exit-modal" class="modal hidden">
+    <div class="modal-content confirm-modal">
+      <h3>Завершить сессию фокуса?</h3>
+      <p class="modal-desc">Вы точно хотите выйти из режима фокуса и отвлечься от работы над текстом?</p>
+      <div class="confirm-actions">
+        <button id="btn-focus-stay" class="accent-btn">Продолжить работу</button>
+        <button id="btn-focus-leave" class="ghost-btn">Выйти из фокуса</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Всплывающая подсказка при наведении на цветную полосу -->
+  <div id="tag-tooltip" class="tooltip hidden"></div>
+
+  <!-- Всплывающее уведомление -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script>
+    // ==========================================================================
+    // ИНИЦИАЛИЗАЦИЯ ВСЕХ DOM-ЭЛЕМЕНТОВ В НАЧАЛЕ СКРИПТА
+    // ==========================================================================
+    const editor = document.getElementById('editor');
+    const workspace = document.getElementById('workspace');
+    const reviewSidebar = document.getElementById('review-sidebar');
+    const btnToggleReview = document.getElementById('btn-toggle-review');
+    const btnUndo = document.getElementById('btn-undo');
+    const btnRedo = document.getElementById('btn-redo');
+
+    const tooltip = document.getElementById('tag-tooltip');
+    const toastEl = document.getElementById('toast');
+    const contextMenu = document.getElementById('custom-context-menu');
+
+    const typographyPopover = document.getElementById('typography-popover');
+    const textColorPopover = document.getElementById('text-color-popover');
+    const themePopover = document.getElementById('theme-popover');
+    const saveDropdownMenu = document.getElementById('save-dropdown-menu');
+
+    const tagDropdownBtn = document.getElementById('tag-dropdown-btn');
+    const tagDropdownMenu = document.getElementById('tag-dropdown-menu');
+    const tagOptionsList = document.getElementById('tag-options-list');
+    const currentTagDot = document.getElementById('current-tag-dot');
+    const currentTagLabel = document.getElementById('current-tag-label');
+
+    const managerModal = document.getElementById('tag-manager-modal');
+    const managerTagsList = document.getElementById('manager-tags-list');
+    const presetSelector = document.getElementById('tag-preset-selector');
+    const mergeSource = document.getElementById('merge-source');
+    const mergeTarget = document.getElementById('merge-target');
+
+    const unsavedModal = document.getElementById('unsaved-modal');
+    const unsavedMsg = document.getElementById('unsaved-message');
+    const step2Modal = document.getElementById('confirm-close-step2-modal');
+    const step2Msg = document.getElementById('step2-message');
+    const focusExitModal = document.getElementById('focus-exit-modal');
+    const btnFocusMode = document.getElementById('btn-focus-mode');
+
+    // ==========================================================================
+    // ГЛОБАЛЬНЫЙ ШАБЛОН ТЕГОВ И ПАЛИТРА ЦВЕТОВ ВЫДЕЛЕНИЯ
+    // ==========================================================================
+    const DEFAULT_GLOBAL_TAGS = [
+      { id: 'tag-1', name: 'Важное', color: '#ef4444' },
+      { id: 'tag-2', name: 'Идея', color: '#3b82f6' },
+      { id: 'tag-3', name: 'Готово', color: '#10b981' },
+      { id: 'tag-4', name: '', color: '#f59e0b' }
+    ];
+
+    const TEXT_COLOR_SWATCHES = [
+      { label: 'Светло-серый', color: '#e2e2e0' },
+      { label: 'Тёмно-графитовый', color: '#1c1c1b' },
+      { label: 'Приглушённый серый', color: '#8e8e93' },
+      { label: 'Красный', color: '#ef4444' },
+      { label: 'Янтарный', color: '#f59e0b' },
+      { label: 'Изумрудный', color: '#10b981' },
+      { label: 'Небесно-синий', color: '#3b82f6' },
+      { label: 'Фиолетовый', color: '#8b5cf6' },
+      { label: 'Розовый', color: '#ec4899' },
+      { label: 'Бирюзовый', color: '#14b8a6' }
+    ];
+
+    function loadGlobalTags() {
+      try {
+        const saved = localStorage.getItem('writers_room_global_tags');
+        return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_GLOBAL_TAGS));
+      } catch (e) {
+        return JSON.parse(JSON.stringify(DEFAULT_GLOBAL_TAGS));
+      }
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.add('hidden'), 2600);
+    }
+
+    // ==========================================================================
+    // УПРАВЛЕНИЕ ВКЛАДКАМИ И ИСТОРИЕЙ ИЗМЕНЕНИЙ (10 ШАГОВ)
+    // ==========================================================================
+    let tabs = [];
+    let activeTabId = null;
+
+    function createTabObject(title = 'Новый файл', html = '<p><br></p>', tagsData = null, presetType = 'global') {
+      return {
+        id: 'tab-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+        title,
+        html,
+        tags: tagsData || loadGlobalTags(),
+        presetType,
+        dirty: false,
+        history: [html],
+        historyIndex: 0,
+        styles: {
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif",
+          fontSize: '16',
+          lineHeight: '1.65'
+        }
+      };
+    }
+
+    function getActiveTab() {
+      return tabs.find(t => t.id === activeTabId);
+    }
+
+    function pushHistory(tab, htmlSnapshot) {
+      if (!tab) return;
+      if (tab.history[tab.historyIndex] === htmlSnapshot) return;
+
+      tab.history = tab.history.slice(0, tab.historyIndex + 1);
+      tab.history.push(htmlSnapshot);
+
+      if (tab.history.length > 11) {
+        tab.history.shift();
+      }
+      tab.historyIndex = tab.history.length - 1;
+      updateHistoryButtons();
+    }
+
+    function updateHistoryButtons() {
+      const tab = getActiveTab();
+      if (!tab) {
+        btnUndo.disabled = true;
+        btnRedo.disabled = true;
+        return;
+      }
+      btnUndo.disabled = tab.historyIndex <= 0;
+      btnRedo.disabled = tab.historyIndex >= tab.history.length - 1;
+    }
+
+    function performUndo() {
+      const tab = getActiveTab();
+      if (!tab || tab.historyIndex <= 0) return;
+      tab.historyIndex -= 1;
+      tab.html = tab.history[tab.historyIndex];
+      editor.innerHTML = tab.html;
+      tab.dirty = true;
+      renderTabs();
+      syncTagIndicator();
+      renderReviewSidebar();
+      updateHistoryButtons();
+    }
+
+    function performRedo() {
+      const tab = getActiveTab();
+      if (!tab || tab.historyIndex >= tab.history.length - 1) return;
+      tab.historyIndex += 1;
+      tab.html = tab.history[tab.historyIndex];
+      editor.innerHTML = tab.html;
+      tab.dirty = true;
+      renderTabs();
+      syncTagIndicator();
+      renderReviewSidebar();
+      updateHistoryButtons();
+    }
+
+    btnUndo.addEventListener('click', performUndo);
+    btnRedo.addEventListener('click', performRedo);
+
+    function syncCurrentTabFromEditor() {
+      const tab = getActiveTab();
+      if (!tab) return;
+      tab.html = editor.innerHTML;
+      tab.styles = {
+        fontFamily: document.getElementById('font-family').value,
+        fontSize: document.getElementById('font-size').value,
+        lineHeight: document.getElementById('line-height').value
+      };
+    }
+
+    function switchToTab(tabId) {
+      if (activeTabId) syncCurrentTabFromEditor();
+      activeTabId = tabId;
+      const tab = getActiveTab();
+      if (!tab) return;
+
+      editor.innerHTML = tab.html;
+      document.getElementById('font-family').value = tab.styles.fontFamily;
+      document.getElementById('font-size').value = tab.styles.fontSize;
+      document.getElementById('line-height').value = tab.styles.lineHeight;
+
+      editor.style.fontFamily = tab.styles.fontFamily;
+      editor.style.fontSize = tab.styles.fontSize + 'px';
+      editor.style.lineHeight = tab.styles.lineHeight;
+
+      renderTabs();
+      syncTagIndicator();
+      renderReviewSidebar();
+      updateHistoryButtons();
+      if (typeof CompanionWidget !== 'undefined') {
+        CompanionWidget.resetLengthTracker();
+      }
+    }
+
+    function renderTabs() {
+      const container = document.getElementById('tabs-container');
+      container.innerHTML = '';
+
+      tabs.forEach(tab => {
+        const el = document.createElement('div');
+        el.className = 'tab-item' + (tab.id === activeTabId ? ' active' : '');
+
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'tab-title';
+        titleSpan.textContent = tab.title;
+        titleSpan.title = 'Двойной клик для переименования';
+
+        el.addEventListener('dblclick', (e) => {
+          e.stopPropagation();
+          if (el.querySelector('.tab-title-input')) return;
+
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'tab-title-input';
+          input.value = tab.title;
+
+          let finished = false;
+          const finishRename = () => {
+            if (finished) return;
+            finished = true;
+            const val = input.value.trim();
+            if (val) tab.title = val;
+            renderTabs();
+          };
+
+          input.addEventListener('blur', finishRename);
+          input.addEventListener('keydown', (ke) => {
+            if (ke.key === 'Enter') finishRename();
+            if (ke.key === 'Escape') {
+              finished = true;
+              renderTabs();
+            }
+          });
+
+          el.replaceChild(input, titleSpan);
+          input.focus();
+          input.select();
+        });
+
+        el.appendChild(titleSpan);
+
+        if (tab.dirty) {
+          const dot = document.createElement('span');
+          dot.className = 'tab-dirty-dot';
+          dot.title = 'Есть несохранённые изменения';
+          el.appendChild(dot);
+        }
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'tab-close';
+        closeBtn.textContent = '✕';
+        closeBtn.title = 'Закрыть вкладку';
+        closeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          requestCloseTab(tab.id);
+        });
+
+        el.appendChild(closeBtn);
+        el.addEventListener('click', () => {
+          if (activeTabId !== tab.id) switchToTab(tab.id);
+        });
+        container.appendChild(el);
+      });
+    }
+
+    function addNewTab() {
+      const newTab = createTabObject('Новый файл');
+      tabs.push(newTab);
+      switchToTab(newTab.id);
+    }
+
+    document.getElementById('btn-new-tab').addEventListener('click', addNewTab);
+    document.getElementById('btn-new').addEventListener('click', addNewTab);
+
+    // ==========================================================================
+    // ПУНКТ 1: ЦВЕТ ВЫДЕЛЕННОГО ТЕКСТА И УМНАЯ ВСТАВКА ИЗ СТОРОННИХ РЕДАКТОРОВ
+    // ==========================================================================
+    let savedSelectionRange = null;
+    let activeTextColor = '#7f6df2';
+
+    function saveEditorSelection() {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        if (editor.contains(range.commonAncestorContainer)) {
+          savedSelectionRange = range.cloneRange();
+        }
+      }
+    }
+
+    function restoreEditorSelection() {
+      if (!savedSelectionRange) return false;
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(savedSelectionRange);
+      return true;
+    }
+
+    editor.addEventListener('mouseup', saveEditorSelection);
+    editor.addEventListener('keyup', saveEditorSelection);
+
+    function applyTextColorToSelection(color) {
+      editor.focus();
+      restoreEditorSelection();
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+        showToast('Выделите фрагмент текста, чтобы изменить его цвет');
+        return;
+      }
+
+      document.execCommand('styleWithCSS', false, true);
+      document.execCommand('foreColor', false, color);
+
+      editor.querySelectorAll('font[color]').forEach(fontEl => {
+        const span = document.createElement('span');
+        span.style.color = fontEl.getAttribute('color');
+        while (fontEl.firstChild) span.appendChild(fontEl.firstChild);
+        fontEl.replaceWith(span);
+      });
+
+      activeTextColor = color;
+      document.getElementById('text-color-indicator').style.backgroundColor = color;
+      document.getElementById('selection-color-picker').value = color;
+
+      saveEditorSelection();
+      const tab = getActiveTab();
+      if (tab) {
+        tab.dirty = true;
+        pushHistory(tab, editor.innerHTML);
+        renderTabs();
+      }
+    }
+
+    function clearTextColorFromSelection() {
+      editor.focus();
+      restoreEditorSelection();
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+        showToast('Выделите фрагмент текста, чтобы сбросить его цвет');
+        return;
+      }
+
+      const range = sel.getRangeAt(0);
+      const fragment = range.extractContents();
+
+      fragment.querySelectorAll('[style]').forEach(el => {
+        el.style.removeProperty('color');
+        if (!el.getAttribute('style') || el.getAttribute('style').trim() === '') {
+          el.removeAttribute('style');
+        }
+      });
+      fragment.querySelectorAll('font[color]').forEach(fontEl => {
+        const span = document.createElement('span');
+        while (fontEl.firstChild) span.appendChild(fontEl.firstChild);
+        fontEl.replaceWith(span);
+      });
+
+      let ancestor = range.commonAncestorContainer;
+      if (ancestor.nodeType === Node.TEXT_NODE) ancestor = ancestor.parentElement;
+      if (ancestor && ancestor !== editor && editor.contains(ancestor)) {
+        const coloredParent = ancestor.closest('span[style*="color"], font[color]');
+        if (coloredParent && editor.contains(coloredParent)) {
+          coloredParent.style.removeProperty('color');
+          if (!coloredParent.getAttribute('style')) coloredParent.removeAttribute('style');
+        }
+      }
+
+      range.insertNode(fragment);
+      sel.removeAllRanges();
+
+      const tab = getActiveTab();
+      if (tab) {
+        tab.dirty = true;
+        pushHistory(tab, editor.innerHTML);
+        renderTabs();
+      }
+      showToast('Цвет выделенного фрагмента сброшен');
+    }
+
+    const swatchesContainer = document.getElementById('color-swatches');
+    TEXT_COLOR_SWATCHES.forEach(item => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'color-swatch-btn';
+      btn.style.backgroundColor = item.color;
+      btn.title = item.label;
+      btn.addEventListener('click', () => {
+        applyTextColorToSelection(item.color);
+        textColorPopover.classList.add('hidden');
+      });
+      swatchesContainer.appendChild(btn);
+    });
+
+    document.getElementById('btn-text-color').addEventListener('click', (e) => {
+      e.stopPropagation();
+      saveEditorSelection();
+      textColorPopover.classList.toggle('hidden');
+      typographyPopover.classList.add('hidden');
+      themePopover.classList.add('hidden');
+      tagDropdownMenu.classList.add('hidden');
+      saveDropdownMenu.classList.add('hidden');
+    });
+
+    textColorPopover.addEventListener('click', (e) => e.stopPropagation());
+
+    document.getElementById('btn-apply-custom-color').addEventListener('click', () => {
+      const customColor = document.getElementById('selection-color-picker').value;
+      applyTextColorToSelection(customColor);
+      textColorPopover.classList.add('hidden');
+    });
+
+    document.getElementById('btn-clear-text-color').addEventListener('click', () => {
+      clearTextColorFromSelection();
+      textColorPopover.classList.add('hidden');
+    });
+
+    function isNeutralDefaultColor(colorStr) {
+      if (!colorStr) return true;
+      const c = colorStr.toLowerCase().replace(/\s+/g, '');
+      if (c === 'windowtext' || c === 'inherit' || c === 'initial' || c === 'transparent') return true;
+      if (c === '#000' || c === '#000000' || c === '#111' || c === '#111111' || c === '#222' || c === '#222222' || c === '#1f1f1e' || c === '#1c1c1b') return true;
+      if (c === '#fff' || c === '#ffffff' || c === '#e2e2e0' || c === '#dcddde') return true;
+      const rgbMatch = c.match(/^rgba?\((\d+),(\d+),(\d+)/);
+      if (rgbMatch) {
+        const r = Number(rgbMatch[1]);
+        const g = Number(rgbMatch[2]);
+        const b = Number(rgbMatch[3]);
+        const maxDiff = Math.max(Math.abs(r - g), Math.abs(g - b), Math.abs(r - b));
+        if (maxDiff <= 14 && (r <= 45 || r >= 220)) return true;
+      }
+      return false;
+    }
+
+    function sanitizePastedHtml(rawHtml) {
+      const temp = document.createElement('div');
+      temp.innerHTML = rawHtml;
+
+      temp.querySelectorAll('style, meta, link, script, title, xml, o\\:p').forEach(el => el.remove());
+
+      const allowedTags = new Set(['P', 'DIV', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'SPAN', 'H1', 'H2', 'H3', 'H4', 'UL', 'OL', 'LI', 'BLOCKQUOTE']);
+
+      const cleanNode = (node) => {
+        Array.from(node.childNodes).forEach(child => {
+          if (child.nodeType === Node.ELEMENT_NODE) {
+            cleanNode(child);
+            const tagName = child.tagName.toUpperCase();
+
+            if (!allowedTags.has(tagName)) {
+              const frag = document.createDocumentFragment();
+              while (child.firstChild) frag.appendChild(child.firstChild);
+              child.replaceWith(frag);
+              return;
+            }
+
+            const prevColor = child.style ? child.style.color : (child.getAttribute('color') || '');
+            Array.from(child.attributes).forEach(attr => child.removeAttribute(attr.name));
+
+            if (prevColor && !isNeutralDefaultColor(prevColor)) {
+              child.style.color = prevColor;
+            } else if (tagName === 'SPAN') {
+              const frag = document.createDocumentFragment();
+              while (child.firstChild) frag.appendChild(child.firstChild);
+              child.replaceWith(frag);
+            }
+          }
+        });
+      };
+
+      cleanNode(temp);
+      return temp.innerHTML;
+    }
+
+    editor.addEventListener('paste', (e) => {
+      const clipboardData = e.clipboardData || window.clipboardData;
+      if (!clipboardData) return;
+
+      const htmlData = clipboardData.getData('text/html');
+      const plainData = clipboardData.getData('text/plain');
+
+      e.preventDefault();
+
+      if (htmlData && htmlData.trim().length > 0) {
+        const cleaned = sanitizePastedHtml(htmlData);
+        document.execCommand('insertHTML', false, cleaned);
+      } else if (plainData) {
+        const lines = plainData.split(/\r?\n/);
+        if (lines.length === 1) {
+          document.execCommand('insertText', false, lines[0]);
+        } else {
+          const htmlBlocks = lines
+            .map(line => {
+              const escaped = line
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+              return `<p>${escaped || '<br>'}</p>`;
+            })
+            .join('');
+          document.execCommand('insertHTML', false, htmlBlocks);
+        }
+      }
+
+      const tab = getActiveTab();
+      if (tab) {
+        tab.dirty = true;
+        pushHistory(tab, editor.innerHTML);
+        renderTabs();
+        renderReviewSidebar();
+      }
+      if (typeof CompanionWidget !== 'undefined') {
+        CompanionWidget.setActivity('writing');
+      }
+    });
+
+    // ==========================================================================
+    // ПУНКТ 2: ГИБКОЕ РАЗБИТИЕ НА ИНСТАНСЫ (ЮНИТЫ ИЗ НЕСКОЛЬКИХ СТРОК / ДИАЛОГОВ)
+    // ==========================================================================
+    function getTopLevelUnit(node) {
+      let curr = node;
+      while (curr && curr !== editor) {
+        if (curr.parentNode === editor) return curr;
+        curr = curr.parentNode;
+      }
+      return null;
+    }
+
+    function getSelectedBlocks() {
+      const selection = window.getSelection();
+      if (!selection.rangeCount) return [];
+      const blocks = new Set();
+      const range = selection.getRangeAt(0);
+
+      Array.from(editor.children).forEach(child => {
+        if (range.intersectsNode(child)) blocks.add(child);
+      });
+
+      if (blocks.size === 0) {
+        const unit = getTopLevelUnit(selection.anchorNode);
+        if (unit) blocks.add(unit);
+      }
+      return Array.from(blocks);
+    }
+
+    function getParagraphInsideNode(node) {
+      let curr = node;
+      while (curr && curr !== editor) {
+        if (curr.parentNode && curr.parentNode.classList && curr.parentNode.classList.contains('doc-instance')) {
+          return curr;
+        }
+        curr = curr.parentNode;
+      }
+      return null;
+    }
+
+    function wrapSelectionInInstance(targetBlocks = null) {
+      const tab = getActiveTab();
+      if (!tab) return;
+
+      const blocks = targetBlocks || getSelectedBlocks();
+      if (blocks.length === 0) {
+        showToast('Выделите абзацы или реплики диалога для объединения в инстанс');
+        return;
+      }
+
+      if (blocks.length === 1 && blocks[0].classList.contains('doc-instance')) {
+        showToast('Этот фрагмент уже является единым инстансом');
+        return;
+      }
+
+      const instanceDiv = document.createElement('div');
+      instanceDiv.className = 'doc-instance';
+      instanceDiv.setAttribute('data-instance', 'true');
+
+      let inheritedTagId = null;
+      for (const b of blocks) {
+        const tid = b.getAttribute('data-tag-id');
+        if (tid) {
+          inheritedTagId = tid;
+          break;
+        }
+      }
+
+      const firstBlock = blocks[0];
+      editor.insertBefore(instanceDiv, firstBlock);
+
+      blocks.forEach(block => {
+        if (block.classList.contains('doc-instance')) {
+          while (block.firstChild) {
+            const inner = block.firstChild;
+            if (inner.nodeType === Node.ELEMENT_NODE) {
+              inner.removeAttribute('data-tag-id');
+              inner.removeAttribute('data-tag-name');
+              inner.style.removeProperty('--tag-color');
+            }
+            instanceDiv.appendChild(inner);
+          }
+          block.remove();
+        } else {
+          block.removeAttribute('data-tag-id');
+          block.removeAttribute('data-tag-name');
+          block.style.removeProperty('--tag-color');
+          instanceDiv.appendChild(block);
+        }
+      });
+
+      if (inheritedTagId) {
+        const tag = tab.tags.find(t => t.id === inheritedTagId);
+        if (tag) {
+          instanceDiv.setAttribute('data-tag-id', tag.id);
+          if (tag.name) instanceDiv.setAttribute('data-tag-name', tag.name);
+          instanceDiv.style.setProperty('--tag-color', tag.color);
+        }
+      }
+
+      tab.dirty = true;
+      pushHistory(tab, editor.innerHTML);
+      renderTabs();
+      syncTagIndicator();
+      renderReviewSidebar();
+      showToast(`Фрагмент объединён в инстанс (${instanceDiv.children.length} абз.)`);
+    }
+
+    function unwrapInstance(instanceEl) {
+      const tab = getActiveTab();
+      if (!tab || !instanceEl || !instanceEl.classList.contains('doc-instance')) return;
+
+      const tagId = instanceEl.getAttribute('data-tag-id');
+      const tag = tagId ? tab.tags.find(t => t.id === tagId) : null;
+
+      const children = Array.from(instanceEl.children);
+      children.forEach(child => {
+        if (tag) {
+          child.setAttribute('data-tag-id', tag.id);
+          if (tag.name) child.setAttribute('data-tag-name', tag.name);
+          child.style.setProperty('--tag-color', tag.color);
+        }
+        editor.insertBefore(child, instanceEl);
+      });
+
+      instanceEl.remove();
+
+      tab.dirty = true;
+      pushHistory(tab, editor.innerHTML);
+      renderTabs();
+      syncTagIndicator();
+      renderReviewSidebar();
+      showToast('Инстанс разгруппирован на отдельные абзацы');
+    }
+
+    function extractParagraphFromInstance(paraEl) {
+      const tab = getActiveTab();
+      if (!tab || !paraEl) return;
+      const instanceEl = paraEl.parentElement;
+      if (!instanceEl || !instanceEl.classList.contains('doc-instance')) return;
+
+      const children = Array.from(instanceEl.children);
+      if (children.length <= 1) {
+        unwrapInstance(instanceEl);
+        return;
+      }
+
+      const idx = children.indexOf(paraEl);
+      if (idx === 0) {
+        editor.insertBefore(paraEl, instanceEl);
+      } else {
+        editor.insertBefore(paraEl, instanceEl.nextSibling);
+      }
+
+      tab.dirty = true;
+      pushHistory(tab, editor.innerHTML);
+      renderTabs();
+      syncTagIndicator();
+      renderReviewSidebar();
+      showToast('Абзац вынесен за пределы инстанса');
+    }
+
+    document.getElementById('btn-wrap-instance').addEventListener('click', () => {
+      wrapSelectionInInstance();
+    });
+
+    editor.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return;
+        const innerPara = getParagraphInsideNode(sel.anchorNode);
+        if (innerPara && innerPara.textContent.trim() === '') {
+          const instanceEl = innerPara.parentElement;
+          if (instanceEl && instanceEl.classList.contains('doc-instance') && innerPara === instanceEl.lastElementChild && instanceEl.children.length > 1) {
+            e.preventDefault();
+            editor.insertBefore(innerPara, instanceEl.nextSibling);
+            const newRange = document.createRange();
+            newRange.setStart(innerPara, 0);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+            renderReviewSidebar();
+          }
+        }
+      }
+    });
+
+    // ==========================================================================
+    // ПУНКТ 3: ЕДИНОЕ МЕНЮ «СОХРАНИТЬ» (ПО УМОЛЧАНИЮ .TXT + .TDOC / .RTF / .HTML)
+    // ==========================================================================
+    const btnSave = document.getElementById('btn-save');
+    btnSave.addEventListener('click', (e) => {
+      e.stopPropagation();
+      saveDropdownMenu.classList.toggle('hidden');
+      tagDropdownMenu.classList.add('hidden');
+      typographyPopover.classList.add('hidden');
+      textColorPopover.classList.add('hidden');
+      themePopover.classList.add('hidden');
+    });
+
+    function extractCleanBlocksFromEditor() {
+      const result = [];
+      const collect = (container) => {
+        Array.from(container.children).forEach(el => {
+          if (el.classList.contains('doc-instance')) {
+            collect(el);
+          } else {
+            result.push(el);
+          }
+        });
+      };
+      collect(editor);
+      return result;
+    }
+
+    function downloadFileBlob(filename, content, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // 1. Сохранение по умолчанию: чистый текст (.txt)
+    function saveTabAsTxt(tabId) {
+      if (tabId === activeTabId) syncCurrentTabFromEditor();
+      const tab = tabs.find(t => t.id === tabId) || getActiveTab();
+      if (!tab) return;
+
+      const title = tab.title || 'Новый файл';
+      const blocks = extractCleanBlocksFromEditor();
+
+      const lines = blocks.map(el => {
+        const tag = el.tagName.toUpperCase();
+        const text = el.innerText.replace(/\u00A0/g, ' ').replace(/\r?\n/g, ' ').trim();
+        if (!text) return '';
+        if (tag === 'H1') return text.toUpperCase();
+        return text;
+      });
+
+      const plainText = lines.join('\r\n\r\n').replace(/(\r\n){3,}/g, '\r\n\r\n').trim();
+      downloadFileBlob(`${title}.txt`, plainText, 'text/plain;charset=utf-8');
+
+      tab.dirty = false;
+      renderTabs();
+      showToast(`Файл «${title}.txt» сохранён`);
+    }
+
+    document.getElementById('btn-save-txt').addEventListener('click', () => {
+      saveDropdownMenu.classList.add('hidden');
+      saveTabAsTxt(activeTabId);
+    });
+
+    // 2. Сохранение проекта Writer's Room (.tdoc) с тегами, инстансами и плейлистом
+    async function saveTabAsTdoc(tabId) {
+      if (tabId === activeTabId) syncCurrentTabFromEditor();
+      const tab = tabs.find(t => t.id === tabId);
+      if (!tab) return;
+
+      const savedPlaylist = (typeof GramophonePlayer !== 'undefined')
+        ? await GramophonePlayer.exportPlaylistForDocument()
+        : [];
+
+      const payload = JSON.stringify({
+        title: tab.title,
+        presetType: tab.presetType,
+        tags: tab.tags,
+        html: tab.html,
+        styles: tab.styles,
+        playlist: savedPlaylist
+      }, null, 2);
+
+      downloadFileBlob(`${tab.title || 'Новый файл'}.tdoc`, payload, 'application/json;charset=utf-8');
+
+      tab.dirty = false;
+      renderTabs();
+      showToast(`Проект «${tab.title}.tdoc» сохранён`);
+    }
+
+    document.getElementById('btn-save-tdoc').addEventListener('click', () => {
+      saveDropdownMenu.classList.add('hidden');
+      saveTabAsTdoc(activeTabId);
+    });
+
+    // 3. Сохранение в .rtf (для Google Docs и Microsoft Word)
+    function escapeRtfUnicode(str) {
+      let out = '';
+      for (let i = 0; i < str.length; i++) {
+        const code = str.charCodeAt(i);
+        const ch = str[i];
+        if (ch === '\\' || ch === '{' || ch === '}') {
+          out += '\\' + ch;
+        } else if (code === 10 || code === 13) {
+          out += '\\line ';
+        } else if (code > 127) {
+          const signed = code > 32767 ? code - 65536 : code;
+          out += `\\u${signed}?`;
+        } else {
+          out += ch;
+        }
+      }
+      return out;
+    }
+
+    function parseCssColorToRgb(colorStr) {
+      if (!colorStr) return null;
+      const c = colorStr.trim().toLowerCase();
+      const hexMatch = c.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/);
+      if (hexMatch) {
+        let hex = hexMatch[1];
+        if (hex.length === 3) hex = hex.split('').map(x => x + x).join('');
+        return {
+          r: parseInt(hex.slice(0, 2), 16),
+          g: parseInt(hex.slice(2, 4), 16),
+          b: parseInt(hex.slice(4, 6), 16)
+        };
+      }
+      const rgbMatch = c.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+      if (rgbMatch) {
+        return { r: Number(rgbMatch[1]), g: Number(rgbMatch[2]), b: Number(rgbMatch[3]) };
+      }
+      return null;
+    }
+
+    function buildRtfDocument(blocks) {
+      const colorTable = [];
+      const getColorIndex = (rgb) => {
+        if (!rgb) return 0;
+        const found = colorTable.findIndex(c => c.r === rgb.r && c.g === rgb.g && c.b === rgb.b);
+        if (found !== -1) return found + 1;
+        colorTable.push(rgb);
+        return colorTable.length;
+      };
+
+      const serializeInlineToRtf = (node, state = { b: false, i: false, u: false, cf: 0 }) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const txt = node.nodeValue.replace(/\u00A0/g, ' ');
+          if (!txt) return '';
+          let prefix = '';
+          let suffix = '';
+          if (state.b) { prefix += '{\\b '; suffix = '}' + suffix; }
+          if (state.i) { prefix += '{\\i '; suffix = '}' + suffix; }
+          if (state.u) { prefix += '{\\ul '; suffix = '}' + suffix; }
+          if (state.cf > 0) { prefix += `{\\cf${state.cf} `; suffix = '}' + suffix; }
+          return prefix + escapeRtfUnicode(txt) + suffix;
+        }
+
+        if (node.nodeType !== Node.ELEMENT_NODE) return '';
+        const tag = node.tagName.toUpperCase();
+        if (tag === 'BR') return '\\line ';
+
+        const nextState = { ...state };
+        if (tag === 'B' || tag === 'STRONG') nextState.b = true;
+        if (tag === 'I' || tag === 'EM') nextState.i = true;
+        if (tag === 'U') nextState.u = true;
+        if (node.style && node.style.fontWeight === 'bold') nextState.b = true;
+        if (node.style && node.style.fontStyle === 'italic') nextState.i = true;
+        if (node.style && node.style.textDecoration && node.style.textDecoration.includes('underline')) nextState.u = true;
+
+        if (node.style && node.style.color && !isNeutralDefaultColor(node.style.color)) {
+          const rgb = parseCssColorToRgb(node.style.color);
+          if (rgb) nextState.cf = getColorIndex(rgb);
+        }
+
+        let inner = '';
+        node.childNodes.forEach(child => {
+          inner += serializeInlineToRtf(child, nextState);
+        });
+        return inner;
+      };
+
+      const bodyParts = blocks.map(el => {
+        const tag = el.tagName.toUpperCase();
+        const indentPx = parseFloat(el.style.textIndent) || 0;
+        const indentTwips = Math.round(indentPx * 15);
+        const contentRtf = serializeInlineToRtf(el);
+
+        if (tag === 'H1') {
+          return `\\pard\\sa240\\sl320\\slmult1{\\b\\fs36 ${contentRtf}}\\par`;
+        }
+        if (tag === 'H2') {
+          return `\\pard\\sa200\\sl300\\slmult1{\\b\\fs30 ${contentRtf}}\\par`;
+        }
+        if (tag === 'H3') {
+          return `\\pard\\sa180\\sl280\\slmult1{\\b\\fs26 ${contentRtf}}\\par`;
+        }
+        const fiPart = indentTwips > 0 ? `\\fi${indentTwips}` : '';
+        return `\\pard${fiPart}\\sa160\\sl312\\slmult1\\fs24 ${contentRtf}\\par`;
+      });
+
+      const colorTblStr = '{\\colortbl;' + colorTable.map(c => `\\red${c.r}\\green${c.g}\\blue${c.b};`).join('') + '}';
+      return `{\\rtf1\\ansi\\ansicpg65001\\deff0{\\fonttbl{\\f0\\froman\\fcharset204 Georgia;}}${colorTblStr}\r\n${bodyParts.join('\r\n')}\r\n}`;
+    }
+
+    document.getElementById('btn-save-rtf').addEventListener('click', () => {
+      saveDropdownMenu.classList.add('hidden');
+      const tab = getActiveTab();
+      const title = (tab && tab.title) ? tab.title : 'Документ';
+      const blocks = extractCleanBlocksFromEditor();
+      const rtfContent = buildRtfDocument(blocks);
+
+      downloadFileBlob(`${title}.rtf`, rtfContent, 'application/rtf;charset=utf-8');
+      if (tab) {
+        tab.dirty = false;
+        renderTabs();
+      }
+      showToast(`Сохранён документ «${title}.rtf» для Google Docs / Word`);
+    });
+
+    // 4. Сохранение в чистый HTML-документ с книжной вёрсткой
+    function buildCleanHtmlSnippet(blocks) {
+      return blocks.map(el => {
+        const clone = el.cloneNode(true);
+        clone.removeAttribute('data-tag-id');
+        clone.removeAttribute('data-tag-name');
+        clone.removeAttribute('class');
+
+        const indent = clone.style.textIndent;
+        clone.removeAttribute('style');
+        if (indent && indent !== '0px') {
+          clone.style.textIndent = indent;
+        }
+
+        clone.querySelectorAll('[style]').forEach(inner => {
+          const c = inner.style.color;
+          inner.removeAttribute('style');
+          if (c && !isNeutralDefaultColor(c)) {
+            inner.style.color = c;
+          }
+        });
+
+        return clone.outerHTML;
+      }).join('\n');
+    }
+
+    document.getElementById('btn-save-html').addEventListener('click', () => {
+      saveDropdownMenu.classList.add('hidden');
+      const tab = getActiveTab();
+      const title = (tab && tab.title) ? tab.title : 'Документ';
+      const blocks = extractCleanBlocksFromEditor();
+      const cleanBody = buildCleanHtmlSnippet(blocks);
+
+      const fullHtml = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>${title}</title>
+  <style>
+    body {
+      max-width: 720px;
+      margin: 48px auto;
+      padding: 0 24px;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 18px;
+      line-height: 1.7;
+      color: #1c1c1b;
+      background: #ffffff;
+    }
+    h1, h2, h3 { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin-top: 1.4em; margin-bottom: 0.6em; }
+    p { margin-bottom: 1em; }
+  </style>
+</head>
+<body>
+${cleanBody}
+</body>
+</html>`;
+
+      downloadFileBlob(`${title}.html`, fullHtml, 'text/html;charset=utf-8');
+      if (tab) {
+        tab.dirty = false;
+        renderTabs();
+      }
+      showToast(`Сохранён файл «${title}.html»`);
+    });
+
+    // 5. Копировать чистый форматированный текст в буфер обмена для вставки в Google Docs / Word
+    document.getElementById('btn-copy-rich').addEventListener('click', async () => {
+      saveDropdownMenu.classList.add('hidden');
+      const blocks = extractCleanBlocksFromEditor();
+      const cleanHtml = buildCleanHtmlSnippet(blocks);
+      const plainText = blocks.map(el => el.innerText.replace(/\u00A0/g, ' ').trim()).join('\n\n');
+
+      try {
+        if (navigator.clipboard && window.ClipboardItem) {
+          const htmlBlob = new Blob([cleanHtml], { type: 'text/html' });
+          const textBlob = new Blob([plainText], { type: 'text/plain' });
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob })
+          ]);
+        } else {
+          await navigator.clipboard.writeText(plainText);
+        }
+        showToast('Текст скопирован — можно вставлять (Ctrl+V) в Google Docs');
+      } catch (err) {
+        showToast('Не удалось получить доступ к буферу обмена');
+      }
+    });
+
+    // ==========================================================================
+    // ОТСЛЕЖИВАНИЕ ИЗМЕНЕНИЙ И ДВУХШАГОВОЕ ПОДТВЕРЖДЕНИЕ ПРИ ЗАКРЫТИИ
+    // ==========================================================================
+    let inputDebounceTimer = null;
+    editor.addEventListener('input', (e) => {
+      const tab = getActiveTab();
+      if (!tab) return;
+
+      if (!tab.dirty) {
+        tab.dirty = true;
+        renderTabs();
+      }
+      renderReviewSidebar();
+
+      if (typeof CompanionWidget !== 'undefined') {
+        CompanionWidget.handleEditorInput(e);
+      }
+
+      clearTimeout(inputDebounceTimer);
+      inputDebounceTimer = setTimeout(() => {
+        pushHistory(tab, editor.innerHTML);
+      }, 450);
+    });
+
+    let tabPendingCloseId = null;
+
+    function requestCloseTab(tabId) {
+      const tab = tabs.find(t => t.id === tabId);
+      if (!tab) return;
+      tabPendingCloseId = tabId;
+
+      if (tab.dirty) {
+        unsavedMsg.textContent = `В файле «${tab.title}» есть несохранённые изменения. Сохранить в .txt перед закрытием?`;
+        unsavedModal.classList.remove('hidden');
+      } else {
+        openStep2ConfirmModal(tab);
+      }
+    }
+
+    function openStep2ConfirmModal(tab) {
+      step2Msg.textContent = `Вы уверены, что хотите завершить работу с файлом «${tab.title}» и закрыть его?`;
+      step2Modal.classList.remove('hidden');
+    }
+
+    function closeTabForce(tabId) {
+      const idx = tabs.findIndex(t => t.id === tabId);
+      if (idx === -1) return;
+      tabs.splice(idx, 1);
+
+      if (tabs.length === 0) {
+        const fresh = createTabObject('Новый файл');
+        tabs.push(fresh);
+        switchToTab(fresh.id);
+      } else if (activeTabId === tabId) {
+        switchToTab(tabs[Math.max(0, idx - 1)].id);
+      } else {
+        renderTabs();
+      }
+    }
+
+    document.getElementById('btn-unsaved-cancel').addEventListener('click', () => {
+      tabPendingCloseId = null;
+      unsavedModal.classList.add('hidden');
+    });
+
+    document.getElementById('btn-unsaved-discard').addEventListener('click', () => {
+      unsavedModal.classList.add('hidden');
+      const tab = tabs.find(t => t.id === tabPendingCloseId);
+      if (tab) openStep2ConfirmModal(tab);
+    });
+
+    document.getElementById('btn-unsaved-save').addEventListener('click', () => {
+      unsavedModal.classList.add('hidden');
+      if (!tabPendingCloseId) return;
+      saveTabAsTxt(tabPendingCloseId);
+      const tab = tabs.find(t => t.id === tabPendingCloseId);
+      if (tab) openStep2ConfirmModal(tab);
+    });
+
+    document.getElementById('btn-step2-stay').addEventListener('click', () => {
+      tabPendingCloseId = null;
+      step2Modal.classList.add('hidden');
+    });
+
+    document.getElementById('btn-step2-confirm').addEventListener('click', () => {
+      step2Modal.classList.add('hidden');
+      if (tabPendingCloseId) {
+        closeTabForce(tabPendingCloseId);
+        tabPendingCloseId = null;
+      }
+    });
+
+    // ==========================================================================
+    // ОТКРЫТИЕ ФАЙЛОВ (.TDOC / .TXT / .HTML)
+    // ==========================================================================
+    const openFileInput = document.getElementById('open-file-input');
+    document.getElementById('btn-open').addEventListener('click', () => openFileInput.click());
+
+    openFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const raw = ev.target.result;
+        const baseName = file.name.replace(/\.[^/.]+$/, '');
+        try {
+          const data = JSON.parse(raw);
+          const newTab = createTabObject(
+            data.title || baseName,
+            data.html || '<p><br></p>',
+            data.tags || loadGlobalTags(),
+            data.presetType || 'custom'
+          );
+          if (data.styles) newTab.styles = data.styles;
+          tabs.push(newTab);
+          switchToTab(newTab.id);
+
+          if (Array.isArray(data.playlist) && data.playlist.length > 0 && typeof GramophonePlayer !== 'undefined') {
+            await GramophonePlayer.importPlaylistFromDocument(data.playlist);
+          }
+        } catch (err) {
+          const lines = raw.split(/\r?\n/).map(l => {
+            const escaped = l.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return `<p>${escaped || '<br>'}</p>`;
+          }).join('');
+          const newTab = createTabObject(baseName, lines || '<p><br></p>');
+          tabs.push(newTab);
+          switchToTab(newTab.id);
+        }
+        openFileInput.value = '';
+      };
+      reader.readAsText(file);
+    });
+
+    // ==========================================================================
+    // ПАНЕЛЬ РЕВЬЮ СЛЕВА ОТ ДОКУМЕНТА (С ПОДДЕРЖКОЙ ИНСТАНСОВ)
+    // ==========================================================================
+    btnToggleReview.addEventListener('click', () => {
+      reviewSidebar.classList.toggle('collapsed');
+      btnToggleReview.classList.toggle('active-toggle', !reviewSidebar.classList.contains('collapsed'));
+      renderReviewSidebar();
+    });
+
+    function pluralizeUnits(count) {
+      const mod10 = count % 10;
+      const mod100 = count % 100;
+      if (mod10 === 1 && mod100 !== 11) return `${count} фрагмент`;
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${count} фрагмента`;
+      return `${count} фрагментов`;
+    }
+
+    function renderReviewSidebar() {
+      if (reviewSidebar.classList.contains('collapsed')) return;
+      const tab = getActiveTab();
+      if (!tab) return;
+
+      reviewSidebar.innerHTML = '';
+      const blocks = Array.from(editor.children).filter(el => {
+        const txt = el.textContent.trim();
+        return txt.length > 0 || el.hasAttribute('data-tag-id') || el.classList.contains('doc-instance');
+      });
+
+      const grouped = new Map();
+      tab.tags.forEach(t => grouped.set(t.id, { tag: t, items: [] }));
+      const untaggedItems = [];
+
+      blocks.forEach((block, index) => {
+        const tagId = block.getAttribute('data-tag-id');
+        const isInstance = block.classList.contains('doc-instance');
+        let textPreview = '';
+        let subCount = 0;
+
+        if (isInstance) {
+          const innerParas = Array.from(block.children);
+          subCount = innerParas.length;
+          const firstNonEmpty = innerParas.find(p => p.textContent.trim().length > 0);
+          textPreview = firstNonEmpty ? firstNonEmpty.textContent.trim() : '(пустой инстанс)';
+        } else {
+          textPreview = block.textContent.trim() || '(пустой абзац)';
+        }
+
+        const entry = { block, text: textPreview, index, isInstance, subCount };
+
+        if (tagId && grouped.has(tagId)) {
+          grouped.get(tagId).items.push(entry);
+        } else {
+          untaggedItems.push(entry);
+        }
+      });
+
+      const buildReviewButton = (item) => {
+        const btn = document.createElement('button');
+        btn.className = 'review-item';
+        btn.title = item.text;
+
+        const span = document.createElement('span');
+        span.className = 'review-item-text';
+        span.textContent = item.text;
+        btn.appendChild(span);
+
+        if (item.isInstance) {
+          const badge = document.createElement('span');
+          badge.className = 'review-instance-badge';
+          badge.textContent = `${item.subCount} абз.`;
+          badge.title = 'Объединённый инстанс';
+          btn.appendChild(badge);
+        }
+
+        btn.addEventListener('click', () => scrollToBlock(item.block));
+        return btn;
+      };
+
+      grouped.forEach(({ tag, items }) => {
+        if (items.length === 0) return;
+
+        const groupEl = document.createElement('div');
+        groupEl.className = 'review-group';
+        groupEl.style.setProperty('--group-color', tag.color);
+
+        const headerEl = document.createElement('div');
+        headerEl.className = 'review-group-header';
+        const titlePrefix = tag.name ? `${tag.name} · ` : '';
+        headerEl.innerHTML = `<span>${titlePrefix}${pluralizeUnits(items.length)}</span>`;
+        headerEl.title = 'Нажмите, чтобы свернуть или развернуть список';
+        headerEl.addEventListener('click', () => groupEl.classList.toggle('folded'));
+
+        const itemsList = document.createElement('div');
+        itemsList.className = 'review-group-items';
+        items.forEach(item => itemsList.appendChild(buildReviewButton(item)));
+
+        groupEl.append(headerEl, itemsList);
+        reviewSidebar.appendChild(groupEl);
+      });
+
+      if (untaggedItems.length > 0) {
+        const groupEl = document.createElement('div');
+        groupEl.className = 'review-group';
+        groupEl.style.setProperty('--group-color', 'rgba(136, 136, 136, 0.45)');
+
+        const headerEl = document.createElement('div');
+        headerEl.className = 'review-group-header';
+        headerEl.innerHTML = `<span>не отмечено · ${pluralizeUnits(untaggedItems.length)}</span>`;
+        headerEl.addEventListener('click', () => groupEl.classList.toggle('folded'));
+
+        const itemsList = document.createElement('div');
+        itemsList.className = 'review-group-items';
+        untaggedItems.forEach(item => itemsList.appendChild(buildReviewButton(item)));
+
+        groupEl.append(headerEl, itemsList);
+        reviewSidebar.appendChild(groupEl);
+      }
+    }
+
+    function scrollToBlock(blockEl) {
+      if (!blockEl) return;
+      blockEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      blockEl.classList.remove('flash-highlight');
+      void blockEl.offsetWidth;
+      blockEl.classList.add('flash-highlight');
+    }
+
+    // ==========================================================================
+    // РАБОТА С ТЕГАМИ И ВЫПАДАЮЩИМ СПИСКОМ
+    // ==========================================================================
+    tagDropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      renderDropdownList();
+      tagDropdownMenu.classList.toggle('hidden');
+      typographyPopover.classList.add('hidden');
+      textColorPopover.classList.add('hidden');
+      themePopover.classList.add('hidden');
+      saveDropdownMenu.classList.add('hidden');
+    });
+
+    function renderDropdownList() {
+      const tab = getActiveTab();
+      if (!tab) return;
+      tagOptionsList.innerHTML = '';
+
+      const noneBtn = document.createElement('button');
+      noneBtn.className = 'dropdown-item';
+      noneBtn.innerHTML = '<span class="tag-dot" style="border: 1px dashed currentColor;"></span> Без тега';
+      noneBtn.onclick = () => {
+        applyTagToSelection('');
+        tagDropdownMenu.classList.add('hidden');
+      };
+      tagOptionsList.appendChild(noneBtn);
+
+      tab.tags.forEach(tag => {
+        const item = document.createElement('button');
+        item.className = 'dropdown-item';
+        const labelHtml = tag.name ? `<span>${tag.name}</span>` : '';
+        item.innerHTML = `<span class="tag-dot" style="background: ${tag.color};"></span>${labelHtml}`;
+        item.onclick = () => {
+          applyTagToSelection(tag.id);
+          tagDropdownMenu.classList.add('hidden');
+        };
+        tagOptionsList.appendChild(item);
+      });
+    }
+
+    function applyTagToSelection(tagId, targetBlocks = null) {
+      const tab = getActiveTab();
+      if (!tab) return;
+      const blocks = targetBlocks || getSelectedBlocks();
+      const tag = tab.tags.find(t => t.id === tagId);
+
+      blocks.forEach(block => {
+        if (!tag) {
+          block.removeAttribute('data-tag-id');
+          block.removeAttribute('data-tag-name');
+          block.style.removeProperty('--tag-color');
+        } else {
+          block.setAttribute('data-tag-id', tag.id);
+          if (tag.name) block.setAttribute('data-tag-name', tag.name);
+          else block.removeAttribute('data-tag-name');
+          block.style.setProperty('--tag-color', tag.color);
+        }
+      });
+
+      tab.dirty = true;
+      pushHistory(tab, editor.innerHTML);
+      renderTabs();
+      syncTagIndicator();
+      renderReviewSidebar();
+    }
+
+    function syncTagIndicator() {
+      const tab = getActiveTab();
+      if (!tab) return;
+      const blocks = getSelectedBlocks();
+      if (blocks.length > 0) {
+        const tagId = blocks[0].getAttribute('data-tag-id');
+        const tag = tab.tags.find(t => t.id === tagId);
+        if (tag) {
+          currentTagDot.style.background = tag.color;
+          currentTagDot.style.border = 'none';
+          currentTagLabel.textContent = tag.name || '';
+          return;
+        }
+      }
+      currentTagDot.style.background = 'transparent';
+      currentTagDot.style.border = '1px dashed currentColor';
+      currentTagLabel.textContent = 'Без тега';
+    }
+
+    editor.addEventListener('keyup', syncTagIndicator);
+    editor.addEventListener('mouseup', syncTagIndicator);
+
+    // ==========================================================================
+    // КАСТОМНОЕ КОНТЕКСТНОЕ МЕНЮ (ПКМ) С ИНСТАНСАМИ, ЦВЕТОМ ТЕКСТА И ТЕГАМИ
+    // ==========================================================================
+    let savedBlocksForContext = [];
+
+    editor.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      saveEditorSelection();
+      const tab = getActiveTab();
+      if (!tab) return;
+
+      const sel = window.getSelection();
+      const hasTextSelection = sel && sel.rangeCount > 0 && !sel.isCollapsed;
+
+      savedBlocksForContext = getSelectedBlocks();
+      if (savedBlocksForContext.length === 0) {
+        const unit = getTopLevelUnit(e.target);
+        if (unit) savedBlocksForContext = [unit];
+      }
+
+      const clickedInnerPara = getParagraphInsideNode(e.target);
+      const singleInstance = (savedBlocksForContext.length === 1 && savedBlocksForContext[0].classList.contains('doc-instance'))
+        ? savedBlocksForContext[0]
+        : null;
+
+      const currentTagId = savedBlocksForContext[0]?.getAttribute('data-tag-id') || '';
+      contextMenu.innerHTML = '';
+
+      if (hasTextSelection) {
+        const colorTitle = document.createElement('div');
+        colorTitle.className = 'ctx-section-title';
+        colorTitle.textContent = 'Цвет выделения';
+        contextMenu.appendChild(colorTitle);
+
+        const colorRow = document.createElement('div');
+        colorRow.className = 'ctx-inline-colors';
+
+        ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'].forEach(hex => {
+          const dot = document.createElement('button');
+          dot.className = 'ctx-color-dot';
+          dot.style.backgroundColor = hex;
+          dot.title = 'Применить цвет';
+          dot.onclick = () => {
+            contextMenu.classList.add('hidden');
+            applyTextColorToSelection(hex);
+          };
+          colorRow.appendChild(dot);
+        });
+
+        const resetBtn = document.createElement('button');
+        resetBtn.className = 'ctx-color-reset';
+        resetBtn.textContent = 'Сброс';
+        resetBtn.title = 'Вернуть цвет по умолчанию';
+        resetBtn.onclick = () => {
+          contextMenu.classList.add('hidden');
+          clearTextColorFromSelection();
+        };
+        colorRow.appendChild(resetBtn);
+
+        contextMenu.appendChild(colorRow);
+
+        const divColor = document.createElement('div');
+        divColor.className = 'dropdown-divider';
+        contextMenu.appendChild(divColor);
+      }
+
+      const instTitle = document.createElement('div');
+      instTitle.className = 'ctx-section-title';
+      instTitle.textContent = 'Юнит / Инстанс';
+      contextMenu.appendChild(instTitle);
+
+      if (singleInstance) {
+        const ungroupBtn = document.createElement('button');
+        ungroupBtn.className = 'ctx-item';
+        ungroupBtn.innerHTML = `<span class="ctx-item-left"><span>Разгруппировать инстанс</span></span><span class="ctx-shortcut">${singleInstance.children.length} абз.</span>`;
+        ungroupBtn.onclick = () => {
+          contextMenu.classList.add('hidden');
+          unwrapInstance(singleInstance);
+        };
+        contextMenu.appendChild(ungroupBtn);
+
+        if (clickedInnerPara && singleInstance.children.length > 1) {
+          const extractBtn = document.createElement('button');
+          extractBtn.className = 'ctx-item';
+          extractBtn.innerHTML = `<span class="ctx-item-left"><span>Вынести абзац из инстанса</span></span>`;
+          extractBtn.onclick = () => {
+            contextMenu.classList.add('hidden');
+            extractParagraphFromInstance(clickedInnerPara);
+          };
+          contextMenu.appendChild(extractBtn);
+        }
+      } else {
+        const wrapBtn = document.createElement('button');
+        wrapBtn.className = 'ctx-item';
+        const countLabel = savedBlocksForContext.length > 1 ? `${savedBlocksForContext.length} абз.` : '';
+        wrapBtn.innerHTML = `<span class="ctx-item-left"><span>Обернуть в инстанс</span></span><span class="ctx-shortcut">${countLabel}</span>`;
+        wrapBtn.onclick = () => {
+          contextMenu.classList.add('hidden');
+          wrapSelectionInInstance(savedBlocksForContext);
+        };
+        contextMenu.appendChild(wrapBtn);
+      }
+
+      const divInst = document.createElement('div');
+      divInst.className = 'dropdown-divider';
+      contextMenu.appendChild(divInst);
+
+      const tagTitle = document.createElement('div');
+      tagTitle.className = 'ctx-section-title';
+      tagTitle.textContent = singleInstance ? 'Тег инстанса' : 'Тег абзаца';
+      contextMenu.appendChild(tagTitle);
+
+      const noneItem = document.createElement('button');
+      noneItem.className = 'ctx-item';
+      noneItem.innerHTML = `
+        <span class="ctx-item-left">
+          <span class="tag-dot" style="border: 1px dashed currentColor;"></span>
+          <span>Без тега</span>
+        </span>
+        <span>${!currentTagId ? '✓' : ''}</span>
+      `;
+      noneItem.onclick = () => {
+        applyTagToSelection('', savedBlocksForContext);
+        contextMenu.classList.add('hidden');
+      };
+      contextMenu.appendChild(noneItem);
+
+      tab.tags.forEach(tag => {
+        const item = document.createElement('button');
+        item.className = 'ctx-item';
+        const labelHtml = tag.name ? `<span>${tag.name}</span>` : '';
+        item.innerHTML = `
+          <span class="ctx-item-left">
+            <span class="tag-dot" style="background: ${tag.color};"></span>
+            ${labelHtml}
+          </span>
+          <span>${currentTagId === tag.id ? '✓' : ''}</span>
+        `;
+        item.onclick = () => {
+          applyTagToSelection(tag.id, savedBlocksForContext);
+          contextMenu.classList.add('hidden');
+        };
+        contextMenu.appendChild(item);
+      });
+
+      const manageItem = document.createElement('button');
+      manageItem.className = 'dropdown-action';
+      manageItem.textContent = 'Настроить теги...';
+      manageItem.onclick = () => {
+        contextMenu.classList.add('hidden');
+        openTagManager();
+      };
+      contextMenu.appendChild(manageItem);
+
+      const div = document.createElement('div');
+      div.className = 'dropdown-divider';
+      contextMenu.appendChild(div);
+
+      [
+        { label: 'Вырезать', cmd: 'cut', key: 'Ctrl+X' },
+        { label: 'Копировать', cmd: 'copy', key: 'Ctrl+C' },
+        { label: 'Вставить', cmd: 'paste', key: 'Ctrl+V' }
+      ].forEach(act => {
+        const btn = document.createElement('button');
+        btn.className = 'ctx-item';
+        btn.innerHTML = `<span>${act.label}</span><span class="ctx-shortcut">${act.key}</span>`;
+        btn.onclick = () => {
+          document.execCommand(act.cmd);
+          contextMenu.classList.add('hidden');
+        };
+        contextMenu.appendChild(btn);
+      });
+
+      contextMenu.classList.remove('hidden');
+      const menuRect = contextMenu.getBoundingClientRect();
+      contextMenu.style.left = Math.max(8, Math.min(e.clientX, window.innerWidth - menuRect.width - 12)) + 'px';
+      contextMenu.style.top = Math.max(8, Math.min(e.clientY, window.innerHeight - menuRect.height - 12)) + 'px';
+    });
+
+    document.addEventListener('click', () => {
+      contextMenu.classList.add('hidden');
+      tagDropdownMenu.classList.add('hidden');
+      typographyPopover.classList.add('hidden');
+      textColorPopover.classList.add('hidden');
+      themePopover.classList.add('hidden');
+      saveDropdownMenu.classList.add('hidden');
+    });
+
+    // ==========================================================================
+    // ПОДСКАЗКА ПРИ НАВЕДЕНИИ ТОЛЬКО НА ЦВЕТНУЮ ПОЛОСУ
+    // ==========================================================================
+    editor.addEventListener('mousemove', (e) => {
+      const block = e.target.closest('[data-tag-name]');
+      if (block) {
+        const rect = block.getBoundingClientRect();
+        const offset = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stripe-offset')) || 70;
+        const width = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stripe-width')) || 1;
+        const stripeCenter = rect.left - offset - width / 2;
+
+        if (Math.abs(e.clientX - stripeCenter) <= 6) {
+          tooltip.textContent = block.getAttribute('data-tag-name');
+          tooltip.style.left = `${e.clientX + 12}px`;
+          tooltip.style.top = `${e.clientY - 10}px`;
+          tooltip.classList.remove('hidden');
+          return;
+        }
+      }
+      tooltip.classList.add('hidden');
+    });
+
+    editor.addEventListener('mouseleave', () => tooltip.classList.add('hidden'));
+
+    // ==========================================================================
+    // УПОРЯДОЧИВАНИЕ ЮНИТОВ (АБЗАЦЕВ И ИНСТАНСОВ) ПО ПОРЯДКУ ТЕГОВ
+    // ==========================================================================
+    document.getElementById('btn-sort-tags').addEventListener('click', () => {
+      const tab = getActiveTab();
+      if (!tab) return;
+      const blocks = Array.from(editor.children);
+      const tagOrder = tab.tags.map(t => t.id);
+
+      blocks.sort((a, b) => {
+        const tagA = a.getAttribute('data-tag-id');
+        const tagB = b.getAttribute('data-tag-id');
+        if (!tagA && !tagB) return 0;
+        if (!tagA) return 1;
+        if (!tagB) return -1;
+        return tagOrder.indexOf(tagA) - tagOrder.indexOf(tagB);
+      });
+
+      blocks.forEach(block => editor.appendChild(block));
+      tab.dirty = true;
+      pushHistory(tab, editor.innerHTML);
+      renderTabs();
+      renderReviewSidebar();
+      showToast('Фрагменты и инстансы упорядочены по порядку тегов');
+    });
+
+    // ==========================================================================
+    // МЕНЕДЖЕР ТЕГОВ (ПЕРЕТАСКИВАНИЕ ПОРЯДКА, ОБЪЕДИНЕНИЕ И ШАБЛОНЫ)
+    // ==========================================================================
+    let draggedTagIndex = null;
+
+    document.getElementById('btn-open-manager').addEventListener('click', (e) => {
+      e.stopPropagation();
+      tagDropdownMenu.classList.add('hidden');
+      openTagManager();
+    });
+
+    document.getElementById('btn-close-manager').addEventListener('click', () => {
+      managerModal.classList.add('hidden');
+    });
+
+    function openTagManager() {
+      const tab = getActiveTab();
+      if (!tab) return;
+      presetSelector.value = tab.presetType;
+      renderManagerUI();
+      managerModal.classList.remove('hidden');
+    }
+
+    function renderManagerUI() {
+      const tab = getActiveTab();
+      if (!tab) return;
+      managerTagsList.innerHTML = '';
+      mergeSource.innerHTML = '';
+      mergeTarget.innerHTML = '';
+
+      tab.tags.forEach((tag, index) => {
+        const row = document.createElement('div');
+        row.className = 'tag-edit-row';
+        row.draggable = true;
+
+        row.addEventListener('dragstart', (e) => {
+          draggedTagIndex = index;
+          row.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+
+        row.addEventListener('dragend', () => {
+          row.classList.remove('dragging');
+          document.querySelectorAll('.tag-edit-row').forEach(r => r.classList.remove('drag-over'));
+        });
+
+        row.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          row.classList.add('drag-over');
+        });
+
+        row.addEventListener('dragleave', () => {
+          row.classList.remove('drag-over');
+        });
+
+        row.addEventListener('drop', (e) => {
+          e.preventDefault();
+          row.classList.remove('drag-over');
+          if (draggedTagIndex === null || draggedTagIndex === index) return;
+
+          const movedItem = tab.tags.splice(draggedTagIndex, 1)[0];
+          tab.tags.splice(index, 0, movedItem);
+          draggedTagIndex = null;
+          tab.dirty = true;
+          renderTabs();
+          renderManagerUI();
+          renderReviewSidebar();
+        });
+
+        const dragHandle = document.createElement('span');
+        dragHandle.className = 'drag-handle';
+        dragHandle.textContent = '⋮⋮';
+        dragHandle.title = 'Перетащите, чтобы изменить порядок тегов';
+
+        const colorInput = document.createElement('input');
+        colorInput.type = 'color';
+        colorInput.value = tag.color;
+        colorInput.oninput = (e) => {
+          tag.color = e.target.value;
+          updateDocumentTagsVisuals();
+          renderReviewSidebar();
+        };
+
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.value = tag.name;
+        nameInput.placeholder = 'Без названия (только цвет)';
+        nameInput.oninput = (e) => {
+          tag.name = e.target.value.trim();
+          updateDocumentTagsVisuals();
+          renderReviewSidebar();
+        };
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'icon-btn';
+        delBtn.textContent = '✕';
+        delBtn.title = 'Удалить тег';
+        delBtn.onclick = () => {
+          editor.querySelectorAll(`[data-tag-id="${tag.id}"]`).forEach(el => {
+            el.removeAttribute('data-tag-id');
+            el.removeAttribute('data-tag-name');
+            el.style.removeProperty('--tag-color');
+          });
+          tab.tags.splice(index, 1);
+          renderManagerUI();
+          syncTagIndicator();
+          renderReviewSidebar();
+        };
+
+        row.append(dragHandle, colorInput, nameInput, delBtn);
+        managerTagsList.appendChild(row);
+
+        const label = tag.name || `Цвет (${tag.color})`;
+        mergeSource.add(new Option(label, tag.id));
+        mergeTarget.add(new Option(label, tag.id));
+      });
+    }
+
+    function updateDocumentTagsVisuals() {
+      const tab = getActiveTab();
+      if (!tab) return;
+      tab.tags.forEach(tag => {
+        editor.querySelectorAll(`[data-tag-id="${tag.id}"]`).forEach(el => {
+          el.style.setProperty('--tag-color', tag.color);
+          if (tag.name) el.setAttribute('data-tag-name', tag.name);
+          else el.removeAttribute('data-tag-name');
+        });
+      });
+      syncTagIndicator();
+    }
+
+    document.getElementById('btn-add-tag').addEventListener('click', () => {
+      const tab = getActiveTab();
+      if (!tab) return;
+      const color = document.getElementById('new-tag-color').value;
+      const name = document.getElementById('new-tag-name').value.trim();
+      tab.tags.push({ id: 'tag-' + Date.now(), name, color });
+      document.getElementById('new-tag-name').value = '';
+      renderManagerUI();
+      renderReviewSidebar();
+    });
+
+    document.getElementById('btn-merge-tags').addEventListener('click', () => {
+      const tab = getActiveTab();
+      if (!tab) return;
+      const sourceId = mergeSource.value;
+      const targetId = mergeTarget.value;
+      if (!sourceId || !targetId || sourceId === targetId) return;
+
+      const targetTag = tab.tags.find(t => t.id === targetId);
+      if (!targetTag) return;
+
+      editor.querySelectorAll(`[data-tag-id="${sourceId}"]`).forEach(el => {
+        el.setAttribute('data-tag-id', targetTag.id);
+        el.style.setProperty('--tag-color', targetTag.color);
+        if (targetTag.name) el.setAttribute('data-tag-name', targetTag.name);
+        else el.removeAttribute('data-tag-name');
+      });
+
+      tab.tags = tab.tags.filter(t => t.id !== sourceId);
+      renderManagerUI();
+      syncTagIndicator();
+      renderReviewSidebar();
+      showToast('Теги успешно объединены');
+    });
+
+    document.getElementById('btn-save-as-global').addEventListener('click', () => {
+      const tab = getActiveTab();
+      if (!tab) return;
+      localStorage.setItem('writers_room_global_tags', JSON.stringify(tab.tags));
+      tab.presetType = 'global';
+      presetSelector.value = 'global';
+      showToast('Набор тегов сохранён как общий шаблон');
+    });
+
+    presetSelector.addEventListener('change', (e) => {
+      const tab = getActiveTab();
+      if (!tab) return;
+      tab.presetType = e.target.value;
+      if (tab.presetType === 'global') {
+        tab.tags = loadGlobalTags();
+        updateDocumentTagsVisuals();
+        renderManagerUI();
+        renderReviewSidebar();
+      }
+    });
+
+    const stripeWidthSlider = document.getElementById('stripe-width-slider');
+    const stripeWidthVal = document.getElementById('stripe-width-val');
+    const stripeOffsetSlider = document.getElementById('stripe-offset-slider');
+    const stripeOffsetVal = document.getElementById('stripe-offset-val');
+
+    function applyStripeAppearance(widthPx, offsetPx) {
+      document.documentElement.style.setProperty('--stripe-width', `${widthPx}px`);
+      document.documentElement.style.setProperty('--stripe-offset', `${offsetPx}px`);
+      stripeWidthSlider.value = widthPx;
+      stripeWidthVal.textContent = `${widthPx} px`;
+      stripeOffsetSlider.value = offsetPx;
+      stripeOffsetVal.textContent = `${offsetPx} px`;
+      try {
+        localStorage.setItem('writers_room_stripe_style', JSON.stringify({ width: widthPx, offset: offsetPx }));
+      } catch (e) {}
+    }
+
+    stripeWidthSlider.addEventListener('input', (e) => {
+      applyStripeAppearance(Number(e.target.value), Number(stripeOffsetSlider.value));
+    });
+
+    stripeOffsetSlider.addEventListener('input', (e) => {
+      applyStripeAppearance(Number(stripeWidthSlider.value), Number(e.target.value));
+    });
+
+    try {
+      const savedStripe = JSON.parse(localStorage.getItem('writers_room_stripe_style'));
+      if (savedStripe && savedStripe.width && savedStripe.offset) {
+        applyStripeAppearance(savedStripe.width, savedStripe.offset);
+      }
+    } catch (e) {}
+
+    // ==========================================================================
+    // ПОПОВЕРЫ ТИПОГРАФИКИ (Aa) И ТЕМЫ ОФОРМЛЕНИЯ
+    // ==========================================================================
+    document.getElementById('btn-typography').addEventListener('click', (e) => {
+      e.stopPropagation();
+      typographyPopover.classList.toggle('hidden');
+      textColorPopover.classList.add('hidden');
+      themePopover.classList.add('hidden');
+      tagDropdownMenu.classList.add('hidden');
+      saveDropdownMenu.classList.add('hidden');
+    });
+
+    document.getElementById('btn-theme-settings').addEventListener('click', (e) => {
+      e.stopPropagation();
+      themePopover.classList.toggle('hidden');
+      typographyPopover.classList.add('hidden');
+      textColorPopover.classList.add('hidden');
+      tagDropdownMenu.classList.add('hidden');
+      saveDropdownMenu.classList.add('hidden');
+    });
+
+    typographyPopover.addEventListener('click', (e) => e.stopPropagation());
+    themePopover.addEventListener('click', (e) => e.stopPropagation());
+
+    const blockFormatSelect = document.getElementById('block-format');
+    blockFormatSelect.addEventListener('change', (e) => {
+      const tag = e.target.value;
+      editor.focus();
+      restoreEditorSelection();
+      document.execCommand('formatBlock', false, tag);
+      const tab = getActiveTab();
+      if (tab) {
+        tab.dirty = true;
+        pushHistory(tab, editor.innerHTML);
+        renderTabs();
+        renderReviewSidebar();
+      }
+    });
+
+    const fontSizeSelect = document.getElementById('font-size');
+    function applyFontSize(sizeVal) {
+      fontSizeSelect.value = sizeVal;
+      editor.style.fontSize = sizeVal + 'px';
+    }
+    fontSizeSelect.addEventListener('change', (e) => applyFontSize(e.target.value));
+    document.getElementById('btn-font-dec').addEventListener('click', () => {
+      if (fontSizeSelect.selectedIndex > 0) {
+        fontSizeSelect.selectedIndex -= 1;
+        applyFontSize(fontSizeSelect.value);
+      }
+    });
+    document.getElementById('btn-font-inc').addEventListener('click', () => {
+      if (fontSizeSelect.selectedIndex < fontSizeSelect.options.length - 1) {
+        fontSizeSelect.selectedIndex += 1;
+        applyFontSize(fontSizeSelect.value);
+      }
+    });
+
+    const indentInput = document.getElementById('para-indent');
+    function applyIndent(val) {
+      const clamped = Math.max(0, Math.min(120, Number(val) || 0));
+      indentInput.value = clamped;
+      getSelectedBlocks().forEach(b => {
+        if (b.classList.contains('doc-instance')) {
+          Array.from(b.children).forEach(p => p.style.textIndent = clamped + 'px');
+        } else {
+          b.style.textIndent = clamped + 'px';
+        }
+      });
+    }
+    indentInput.addEventListener('input', (e) => applyIndent(e.target.value));
+    document.getElementById('btn-indent-dec').addEventListener('click', () => applyIndent(Number(indentInput.value) - 8));
+    document.getElementById('btn-indent-inc').addEventListener('click', () => applyIndent(Number(indentInput.value) + 8));
+
+    document.getElementById('font-family').addEventListener('change', (e) => editor.style.fontFamily = e.target.value);
+    document.getElementById('line-height').addEventListener('change', (e) => editor.style.lineHeight = e.target.value);
+
+    const btnLight = document.getElementById('btn-set-light');
+    const btnDark = document.getElementById('btn-set-dark');
+
+    btnLight.addEventListener('click', () => {
+      document.body.classList.remove('theme-dark');
+      btnLight.classList.add('active');
+      btnDark.classList.remove('active');
+      document.documentElement.style.setProperty('--page-bg', '#ffffff');
+      document.documentElement.style.setProperty('--page-text', '#1c1c1b');
+      document.documentElement.style.setProperty('--app-bg', '#f5f5f4');
+      document.getElementById('page-bg-picker').value = '#ffffff';
+      document.getElementById('page-text-picker').value = '#1c1c1b';
+      document.getElementById('app-bg-picker').value = '#f5f5f4';
+    });
+
+    btnDark.addEventListener('click', () => {
+      document.body.classList.add('theme-dark');
+      btnDark.classList.add('active');
+      btnLight.classList.remove('active');
+      document.documentElement.style.setProperty('--page-bg', '#202020');
+      document.documentElement.style.setProperty('--page-text', '#e2e2e0');
+      document.documentElement.style.setProperty('--app-bg', '#191919');
+      document.getElementById('page-bg-picker').value = '#202020';
+      document.getElementById('page-text-picker').value = '#e2e2e0';
+      document.getElementById('app-bg-picker').value = '#191919';
+    });
+
+    document.getElementById('page-bg-picker').addEventListener('input', (e) => document.documentElement.style.setProperty('--page-bg', e.target.value));
+    document.getElementById('page-text-picker').addEventListener('input', (e) => document.documentElement.style.setProperty('--page-text', e.target.value));
+    document.getElementById('app-bg-picker').addEventListener('input', (e) => document.documentElement.style.setProperty('--app-bg', e.target.value));
+    document.getElementById('accent-picker').addEventListener('input', (e) => document.documentElement.style.setProperty('--accent-color', e.target.value));
+    document.getElementById('btn-reset-theme').addEventListener('click', () => {
+      ['--page-bg', '--page-text', '--app-bg', '--accent-color'].forEach(v => document.documentElement.style.removeProperty(v));
+      showToast('Цвета темы сброшены');
+    });
+
+    // ==========================================================================
+    // РЕЖИМ ФОКУСА С ПОДТВЕРЖДЕНИЕМ ВЫХОДА
+    // ==========================================================================
+    let isFocusMode = false;
+
+    function enterFocusMode() {
+      isFocusMode = true;
+      document.body.classList.add('focus-mode');
+      btnFocusMode.classList.add('active-toggle');
+      btnFocusMode.title = 'Выйти из режима фокуса';
+      typographyPopover.classList.add('hidden');
+      textColorPopover.classList.add('hidden');
+      themePopover.classList.add('hidden');
+      tagDropdownMenu.classList.add('hidden');
+      saveDropdownMenu.classList.add('hidden');
+      showToast('Режим фокуса включён');
+    }
+
+    function exitFocusMode() {
+      isFocusMode = false;
+      document.body.classList.remove('focus-mode');
+      btnFocusMode.classList.remove('active-toggle');
+      btnFocusMode.title = 'Режим фокуса (скрыть лишние панели)';
+    }
+
+    btnFocusMode.addEventListener('click', () => {
+      if (!isFocusMode) {
+        enterFocusMode();
+      } else {
+        focusExitModal.classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('btn-focus-stay').addEventListener('click', () => {
+      focusExitModal.classList.add('hidden');
+    });
+
+    document.getElementById('btn-focus-leave').addEventListener('click', () => {
+      focusExitModal.classList.add('hidden');
+      exitFocusMode();
+      showToast('Режим фокуса отключён');
+    });
+
+    // Форматирование и вставка изображений
+    document.getElementById('btn-bold').addEventListener('click', () => document.execCommand('bold'));
+    document.getElementById('btn-italic').addEventListener('click', () => document.execCommand('italic'));
+    document.getElementById('btn-underline').addEventListener('click', () => document.execCommand('underline'));
+
+    const imageInput = document.getElementById('image-input');
+    document.getElementById('btn-image').addEventListener('click', () => imageInput.click());
+    imageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = document.createElement('img');
+        img.src = event.target.result;
+        editor.appendChild(img);
+        const tab = getActiveTab();
+        if (tab) {
+          tab.dirty = true;
+          pushHistory(tab, editor.innerHTML);
+          renderTabs();
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Горячие клавиши (Ctrl+S сохраняет в формате .txt по умолчанию)
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        saveTabAsTxt(activeTabId);
+      } else if (e.ctrlKey && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        performUndo();
+      } else if ((e.ctrlKey && e.key.toLowerCase() === 'y') || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'z')) {
+        e.preventDefault();
+        performRedo();
+      } else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'g') {
+        e.preventDefault();
+        wrapSelectionInInstance();
+      } else if (e.key === 'Escape' && isFocusMode) {
+        e.preventDefault();
+        focusExitModal.classList.remove('hidden');
+      }
+    });
+
+    // ==========================================================================
+    // МОДУЛЬ ВИДЖЕТА: ПИКСЕЛЬНЫЙ ПОМОЩНИК И ГРАММОФОН
+    // ==========================================================================
+    const CompanionWidget = (() => {
+      const widgetEl = document.getElementById('companion-widget');
+      const btnToggleWidget = document.getElementById('btn-toggle-companion');
+      const btnCloseWidget = document.getElementById('btn-close-companion');
+      const btnMenu = document.getElementById('btn-companion-menu');
+      const settingsPopover = document.getElementById('companion-settings-popover');
+      const sceneOptionBtns = document.querySelectorAll('.scene-option-btn[data-scene]');
+      const stateLabelEl = document.getElementById('companion-state-label');
+      const canvas = document.getElementById('companion-canvas');
+      const ctx = canvas.getContext('2d');
+
+      let activityState = 'thinking';
+      let idleTimer = null;
+      let prevTextLength = 0;
+      let animFrameId = null;
+
+      let lastFrameTime = 0;
+      let animStep = 0;
+      let lastNoteSpawnTime = 0;
+
+      const VALID_SCENES = ['study', 'mistyForest', 'mountainRidge', 'skyColonnade', 'sunsetCabin'];
+      let currentSceneKey = 'study';
+      try {
+        const savedScene = localStorage.getItem('writers_room_companion_scene');
+        if (VALID_SCENES.includes(savedScene)) {
+          currentSceneKey = savedScene;
+        }
+      } catch (e) {}
+
+      let gramophoneHitbox = { x: 20, y: 110, w: 26, h: 24 };
+      let isGramophoneHovered = false;
+      const notes = [];
+
+      const CharacterSkins = {
+        pixelWriter: {
+          name: 'Пиксельный писатель',
+          draw(ctx, deskX, deskY, state, step, palette) {
+            const px = (x, y, w, h, color = palette.ink) => {
+              ctx.fillStyle = color;
+              ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+            };
+
+            const headBob = (step % 2 === 1) ? 1 : 0;
+            const charX = deskX + 46;
+            const charY = deskY - 22;
+
+            px(charX + 10, deskY - 12, 3, 12, palette.ink);
+            px(charX + 18, deskY - 12, 3, 12, palette.ink);
+            px(charX + 9, deskY - 13, 13, 2, palette.ink);
+            px(charX + 19, deskY - 22, 2, 10, palette.ink);
+
+            px(charX + 6, charY + 11, 11, 10, palette.ink);
+            px(charX + 7, charY + 12, 9, 8, palette.charFill);
+
+            const hy = charY + headBob;
+            px(charX + 3, hy, 14, 12, palette.ink);
+            px(charX + 4, hy + 1, 12, 10, palette.charFill);
+
+            if (state === 'thinking') {
+              px(charX + 5, hy + 4, 2, 2, palette.ink);
+              px(charX + 9, hy + 4, 2, 2, palette.ink);
+            } else {
+              px(charX + 4, hy + 6, 2, 2, palette.ink);
+              px(charX + 8, hy + 6, 2, 2, palette.ink);
+            }
+
+            const twX = deskX + 26;
+            const twY = deskY - 9;
+
+            px(twX + 2, twY + 3, 16, 6, palette.ink);
+            px(twX + 4, twY + 4, 12, 3, palette.accent);
+            px(twX + 5, twY + 7, 10, 1, palette.paper);
+
+            const carriageShift = state === 'writing' ? (step % 2 === 0 ? -1 : 1)
+                                : state === 'erasing' ? (step % 2 === 0 ? -2 : 2)
+                                : 0;
+            px(twX + 1 + carriageShift, twY + 1, 18, 2, palette.ink);
+            px(twX + 5 + carriageShift, twY - 6, 10, 7, palette.paper);
+            px(twX + 5 + carriageShift, twY - 6, 10, 1, palette.ink);
+            px(twX + 7 + carriageShift, twY - 4, 6, 1, palette.ink);
+            if (state === 'erasing') {
+              px(twX + 6 + carriageShift, twY - 2, 8, 1, palette.accent);
+            } else {
+              px(twX + 7 + carriageShift, twY - 2, 4, 1, palette.ink);
+            }
+
+            if (state === 'writing') {
+              const leftHandUp = (step % 2 === 0) ? -1 : 0;
+              const rightHandUp = (step % 2 === 1) ? -1 : 0;
+              px(charX + 1, charY + 13 + leftHandUp, 5, 2, palette.ink);
+              px(charX + 3, charY + 15 + rightHandUp, 5, 2, palette.ink);
+            } else if (state === 'erasing') {
+              const reachShift = (step % 2 === 0) ? -1 : 1;
+              px(charX - 2 + reachShift, charY + 11, 7, 2, palette.ink);
+              px(twX + 12 + reachShift, twY - 3, 2, 4, palette.ink);
+            } else {
+              px(charX + 2, hy + 10, 4, 4, palette.ink);
+              const dotPhase = step % 4;
+              if (dotPhase >= 1) px(charX + 1, hy - 5, 2, 2, palette.ink);
+              if (dotPhase >= 2) px(charX + 5, hy - 8, 2, 2, palette.ink);
+              if (dotPhase >= 3) px(charX + 9, hy - 10, 2, 2, palette.ink);
+            }
+          }
+        }
+      };
+
+      let currentSkinKey = 'pixelWriter';
+
+      function drawDeskAndGramophone(ctx, deskX, deskTopY, pal, step) {
+        const px = (x, y, rw, rh, color = pal.ink) => {
+          ctx.fillStyle = color;
+          ctx.fillRect(Math.round(x), Math.round(y), Math.round(rw), Math.round(rh));
+        };
+
+        const deskW = 104;
+        px(deskX, deskTopY, deskW, 2, pal.ink);
+        px(deskX + 8, deskTopY + 2, 2, 14, pal.ink);
+        px(deskX + deskW - 10, deskTopY + 2, 2, 14, pal.ink);
+
+        const gramX = deskX + 4;
+        const gramY = deskTopY - 19;
+        gramophoneHitbox = { x: gramX - 3, y: gramY - 4, w: 24, h: 24 };
+
+        if (isGramophoneHovered) {
+          ctx.strokeStyle = pal.ink;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(gramophoneHitbox.x, gramophoneHitbox.y, gramophoneHitbox.w, gramophoneHitbox.h);
+        }
+
+        px(gramX + 2, deskTopY - 6, 14, 6, pal.wood);
+        px(gramX + 2, deskTopY - 6, 14, 1, pal.ink);
+        const discShift = (GramophonePlayer.isPlaying() && step % 2 === 1) ? 1 : 0;
+        px(gramX + 3 + discShift, deskTopY - 8, 12, 2, pal.ink);
+        px(gramX + 3, deskTopY - 13, 2, 7, pal.ink);
+        px(gramX + 5, deskTopY - 17, 7, 5, pal.ink);
+        px(gramX + 11, deskTopY - 19, 4, 8, pal.wood);
+        px(gramX + 14, deskTopY - 19, 1, 8, pal.ink);
+
+        return { gramX };
+      }
+
+      const SceneThemes = {
+        study: {
+          label: 'Кабинет',
+          getPalette(isDark) {
+            return isDark ? {
+              ink: '#d6dfd2',
+              charFill: '#2a3029',
+              paper: '#e8efe5',
+              accent: '#9cb396',
+              windowSky: '#1b221c',
+              wood: '#6b7a68'
+            } : {
+              ink: '#3a4037',
+              charFill: '#b7c2b3',
+              paper: '#f4f7f2',
+              accent: '#5c6b56',
+              windowSky: '#3a4037',
+              wood: '#586353'
+            };
+          },
+          drawBackground(ctx, w, h, floorY, pal, step) {
+            const px = (x, y, rw, rh, color = pal.ink) => {
+              ctx.fillStyle = color;
+              ctx.fillRect(Math.round(x), Math.round(y), Math.round(rw), Math.round(rh));
+            };
+
+            px(0, floorY, w, 2, pal.ink);
+
+            const winW = 36;
+            const winH = 56;
+            const winX = Math.floor(w * 0.56);
+            const winY = floorY - 80;
+
+            px(winX + 6, winY, winW - 12, winH, pal.windowSky);
+            px(winX + 2, winY + 4, winW - 4, winH - 4, pal.windowSky);
+            px(winX, winY + 10, winW, winH - 10, pal.windowSky);
+
+            const starBlink = step % 2;
+            px(winX + 8, winY + 10, 2, 2, pal.charFill);
+            px(winX + 24, winY + 8, 2, 2, pal.charFill);
+            if (starBlink === 0) {
+              px(winX + 16, winY + 16, 2, 2, pal.charFill);
+            } else {
+              px(winX + 11, winY + 21, 2, 2, pal.charFill);
+            }
+
+            const treeBaseY = winY + winH - 2;
+            px(winX + 9, treeBaseY - 12, 2, 12, pal.charFill);
+            px(winX + 7, treeBaseY - 9, 6, 2, pal.charFill);
+            px(winX + 5, treeBaseY - 5, 10, 3, pal.charFill);
+
+            px(winX + 23, treeBaseY - 16, 2, 16, pal.charFill);
+            px(winX + 21, treeBaseY - 13, 6, 2, pal.charFill);
+            px(winX + 19, treeBaseY - 9, 10, 2, pal.charFill);
+            px(winX + 17, treeBaseY - 5, 14, 3, pal.charFill);
+
+            px(winX, winY + Math.floor(winH * 0.56), winW, 2, pal.charFill);
+            px(winX + Math.floor(winW / 2), winY, 2, winH, pal.charFill);
+
+            const shelfX = w - 44;
+            const shelfY = floorY - 66;
+            px(shelfX, shelfY, 44, 2, pal.ink);
+            px(shelfX, shelfY, 2, 66, pal.ink);
+            px(shelfX, shelfY + 22, 44, 2, pal.ink);
+            px(shelfX, shelfY + 44, 44, 2, pal.ink);
+
+            for (let row = 0; row < 3; row++) {
+              const by = shelfY + row * 22 + 5;
+              for (let b = 0; b < 7; b++) {
+                const bh = 12 + ((b + row) % 4);
+                px(shelfX + 5 + b * 5, by + (16 - bh), 3, bh, b % 2 === 0 ? pal.ink : pal.wood);
+              }
+            }
+
+            const chairX = w - 76;
+            const chairY = floorY - 26;
+            px(chairX + 4, chairY, 28, 16, pal.charFill);
+            px(chairX + 4, chairY, 28, 2, pal.ink);
+            px(chairX + 4, chairY, 2, 26, pal.ink);
+            px(chairX + 30, chairY, 2, 26, pal.ink);
+            px(chairX, chairY + 10, 6, 16, pal.charFill);
+            px(chairX, chairY + 10, 6, 2, pal.ink);
+            px(chairX, chairY + 10, 2, 16, pal.ink);
+            px(chairX + 30, chairY + 10, 6, 16, pal.charFill);
+            px(chairX + 30, chairY + 10, 6, 2, pal.ink);
+            px(chairX + 34, chairY + 10, 2, 16, pal.ink);
+            px(chairX + 2, chairY + 20, 32, 2, pal.ink);
+          }
+        },
+
+        mistyForest: {
+          label: 'Туманный лес',
+          getPalette(isDark) {
+            return isDark ? {
+              ink: '#d7dfeb',
+              charFill: '#242933',
+              paper: '#eef3fa',
+              accent: '#8a9ab5',
+              wood: '#59657a',
+              skyTop: '#2c3440',
+              skyMid: '#3a4454',
+              fog: '#4c576b',
+              distantTree: '#3d4759',
+              midTree: '#2d3545',
+              monolith: '#5c687d',
+              monolithHole: '#3d4759',
+              water: '#6a7991',
+              waterShine: '#9eb0cc',
+              ground: '#1b2029',
+              flower: '#8b6ef3'
+            } : {
+              ink: '#2d333d',
+              charFill: '#b8c2c7',
+              paper: '#f5f8fa',
+              accent: '#637082',
+              wood: '#525d6e',
+              skyTop: '#cfd8dc',
+              skyMid: '#bcc7cc',
+              fog: '#a5b2b8',
+              distantTree: '#94a1a8',
+              midTree: '#76838c',
+              monolith: '#6c7a85',
+              monolithHole: '#b0bcc2',
+              water: '#cdd6db',
+              waterShine: '#eef3f5',
+              ground: '#3a404a',
+              flower: '#7c5ce6'
+            };
+          },
+          drawBackground(ctx, w, h, floorY, pal, step) {
+            const px = (x, y, rw, rh, color) => {
+              ctx.fillStyle = color;
+              ctx.fillRect(Math.round(x), Math.round(y), Math.round(rw), Math.round(rh));
+            };
+
+            px(0, 0, w, Math.floor(h * 0.42), pal.skyTop);
+            px(0, Math.floor(h * 0.42), w, Math.floor(h * 0.25), pal.skyMid);
+
+            const drawPine = (cx, baseY, height, color) => {
+              px(cx, baseY - height, 2, height, color);
+              const tiers = Math.floor(height / 7);
+              for (let t = 0; t < tiers; t++) {
+                const ty = baseY - height + 4 + t * 6;
+                const tw = 4 + t * 3;
+                px(cx - Math.floor(tw / 2) + 1, ty, tw, 3, color);
+              }
+            };
+
+            drawPine(18, floorY - 26, 74, pal.distantTree);
+            drawPine(44, floorY - 28, 56, pal.distantTree);
+            drawPine(178, floorY - 28, 64, pal.distantTree);
+            drawPine(232, floorY - 26, 78, pal.distantTree);
+            drawPine(264, floorY - 26, 62, pal.distantTree);
+
+            px(0, floorY - 46, w, 18, pal.fog);
+
+            const monoX = Math.floor(w * 0.44);
+            const monoBaseY = floorY - 24;
+            px(monoX + 4, monoBaseY - 62, 16, 62, pal.monolith);
+            px(monoX + 2, monoBaseY - 56, 20, 56, pal.monolith);
+            px(monoX + 6, monoBaseY - 66, 12, 4, pal.monolith);
+            px(monoX - 2, monoBaseY - 24, 5, 24, pal.monolith);
+            px(monoX + 21, monoBaseY - 20, 5, 20, pal.monolith);
+            px(monoX + 9, monoBaseY - 54, 6, 10, pal.monolithHole);
+            px(monoX + 8, monoBaseY - 52, 8, 6, pal.monolithHole);
+
+            drawPine(12, floorY - 20, 68, pal.midTree);
+            drawPine(252, floorY - 20, 72, pal.midTree);
+
+            const lakeY = floorY - 16;
+            px(Math.floor(w * 0.46), lakeY, Math.ceil(w * 0.54), 16, pal.water);
+            const rippleShift = (step % 2 === 0) ? 0 : 3;
+            px(Math.floor(w * 0.54) + rippleShift, lakeY + 4, 24, 2, pal.waterShine);
+            px(Math.floor(w * 0.68) - rippleShift, lakeY + 9, 32, 2, pal.waterShine);
+            px(Math.floor(w * 0.50), lakeY + 12, 18, 1, pal.waterShine);
+
+            px(0, floorY - 18, Math.floor(w * 0.52), 4, pal.ground);
+            px(0, floorY - 14, Math.floor(w * 0.48), 14, pal.ground);
+            px(0, floorY, w, h - floorY, pal.ground);
+
+            const flowers = [14, 34, 128, 146, 198, 244, 272];
+            flowers.forEach((fx, i) => {
+              const fy = floorY + 2 + (i % 3) * 4;
+              px(fx, fy, 2, 3, pal.midTree);
+              px(fx, fy - 1, 2, 2, pal.flower);
+            });
+          }
+        },
+
+        mountainRidge: {
+          label: 'Горный хребет',
+          getPalette(isDark) {
+            return isDark ? {
+              ink: '#d4e6f2',
+              charFill: '#1e2d38',
+              paper: '#edf5fa',
+              accent: '#7ea2ba',
+              wood: '#547387',
+              skyTop: '#263845',
+              skyBottom: '#344c5c',
+              peakShadow: '#49677a',
+              peakSnow: '#7fa1b5',
+              farTrees: '#365263',
+              midTrees: '#28404f',
+              nearTrees: '#1d313d',
+              ground: '#15242e'
+            } : {
+              ink: '#1f3542',
+              charFill: '#b7ccd9',
+              paper: '#f5f9fc',
+              accent: '#597f96',
+              wood: '#45687d',
+              skyTop: '#eef4f7',
+              skyBottom: '#dce8ef',
+              peakShadow: '#b4cddb',
+              peakSnow: '#f7fbfc',
+              farTrees: '#9ebdcf',
+              midTrees: '#779eb3',
+              nearTrees: '#48748c',
+              ground: '#224154'
+            };
+          },
+          drawBackground(ctx, w, h, floorY, pal) {
+            const px = (x, y, rw, rh, color) => {
+              ctx.fillStyle = color;
+              ctx.fillRect(Math.round(x), Math.round(y), Math.round(rw), Math.round(rh));
+            };
+
+            px(0, 0, w, Math.floor(h * 0.45), pal.skyTop);
+            px(0, Math.floor(h * 0.45), w, Math.floor(h * 0.35), pal.skyBottom);
+
+            const drawMountain = (peakX, peakY, halfW, baseY) => {
+              const rows = baseY - peakY;
+              for (let r = 0; r < rows; r += 2) {
+                const span = Math.floor((r / rows) * halfW);
+                px(peakX - span, peakY + r, span * 2, 2, pal.peakShadow);
+                if (r < rows * 0.5) {
+                  const snowSpan = Math.max(2, Math.floor(span * 0.78));
+                  px(peakX - Math.floor(snowSpan * 0.35), peakY + r, snowSpan, 2, pal.peakSnow);
+                }
+              }
+            };
+
+            drawMountain(58, 16, 66, floorY - 26);
+            drawMountain(118, 28, 54, floorY - 26);
+            drawMountain(246, 18, 72, floorY - 26);
+
+            const drawPine = (cx, baseY, height, color) => {
+              px(cx, baseY - height, 2, height, color);
+              const tiers = Math.floor(height / 5);
+              for (let t = 0; t < tiers; t++) {
+                const ty = baseY - height + 3 + t * 5;
+                const tw = 3 + t * 2;
+                px(cx - Math.floor(tw / 2) + 1, ty, tw, 3, color);
+              }
+            };
+
+            [16, 36, 54, 74, 96, 114, 134, 154, 174, 196, 218, 238, 260, 278].forEach((x, idx) => {
+              const eh = 34 + ((idx * 13) % 24);
+              drawPine(x, floorY - 24, eh, pal.farTrees);
+            });
+
+            [8, 28, 48, 86, 122, 162, 192, 248, 270].forEach((x, idx) => {
+              const eh = 30 + ((idx * 17) % 24);
+              drawPine(x, floorY - 14, eh, pal.midTrees);
+            });
+
+            px(222, floorY - 26, 3, 7, pal.midTrees);
+            px(222, floorY - 19, 1, 4, pal.midTrees);
+            px(224, floorY - 19, 1, 4, pal.midTrees);
+
+            drawPine(10, floorY - 4, 80, pal.nearTrees);
+            drawPine(26, floorY - 4, 66, pal.nearTrees);
+            drawPine(42, floorY - 4, 52, pal.nearTrees);
+
+            px(0, floorY - 13, Math.floor(w * 0.62), 13, pal.nearTrees);
+            px(Math.floor(w * 0.42), floorY - 9, Math.ceil(w * 0.58), 9, pal.nearTrees);
+            px(0, floorY - 4, w, h - floorY + 4, pal.ground);
+          }
+        },
+
+        skyColonnade: {
+          label: 'Небесная колоннада',
+          getPalette(isDark) {
+            return isDark ? {
+              ink: '#d9ebff',
+              charFill: '#192b47',
+              paper: '#f0f7ff',
+              accent: '#69a2eb',
+              wood: '#4d7cb8',
+              sky: '#1c3659',
+              cloudMain: '#2d5080',
+              cloudShade: '#234069',
+              column: '#4773ab',
+              columnShade: '#335685',
+              whaleDark: '#3b82f6',
+              whaleBelly: '#93c5fd',
+              water: '#23436e',
+              waterReflect: '#3c67a3'
+            } : {
+              ink: '#173761',
+              charFill: '#b3d4fa',
+              paper: '#ffffff',
+              accent: '#2c7be5',
+              wood: '#4b7bb5',
+              sky: '#85befa',
+              cloudMain: '#ffffff',
+              cloudShade: '#d6e8ff',
+              column: '#6593cc',
+              columnShade: '#4a75ab',
+              whaleDark: '#1b6ed1',
+              whaleBelly: '#90c2f9',
+              water: '#7ab3f5',
+              waterReflect: '#a8d1fc'
+            };
+          },
+          drawBackground(ctx, w, h, floorY, pal, step) {
+            const px = (x, y, rw, rh, color) => {
+              ctx.fillStyle = color;
+              ctx.fillRect(Math.round(x), Math.round(y), Math.round(rw), Math.round(rh));
+            };
+
+            px(0, 0, w, floorY - 12, pal.sky);
+
+            const drawCloud = (cx, cy, r) => {
+              px(cx - r, cy - Math.floor(r * 0.6), r * 2, Math.floor(r * 1.2), pal.cloudShade);
+              px(cx - Math.floor(r * 0.8), cy - r, Math.floor(r * 1.6), Math.floor(r * 1.4), pal.cloudMain);
+              px(cx - Math.floor(r * 1.3), cy - Math.floor(r * 0.3), Math.floor(r * 2.6), Math.floor(r * 0.8), pal.cloudMain);
+            };
+            drawCloud(76, 84, 30);
+            drawCloud(158, 62, 36);
+            drawCloud(238, 86, 28);
+
+            px(86, 40, 26, 6, pal.cloudShade);
+            px(110, 38, 6, 4, pal.cloudShade);
+            px(52, 54, 32, 8, pal.cloudMain);
+
+            const archTopY = 14;
+            px(0, 0, w, archTopY, pal.column);
+            px(0, archTopY, w, 3, pal.columnShade);
+
+            const colPositions = [14, 68, 122, 176, 230, 276];
+            colPositions.forEach((cx, idx) => {
+              px(cx, archTopY + 3, 5, floorY - 12 - (archTopY + 3), pal.column);
+              px(cx + 3, archTopY + 3, 2, floorY - 12 - (archTopY + 3), pal.columnShade);
+              px(cx - 2, archTopY + 3, 9, 3, pal.columnShade);
+              px(cx - 2, floorY - 17, 9, 5, pal.columnShade);
+
+              if (idx < colPositions.length - 1) {
+                const nextX = colPositions[idx + 1];
+                const span = nextX - (cx + 5);
+                px(cx + 5, archTopY + 3, 5, 8, pal.column);
+                px(nextX - 5, archTopY + 3, 5, 8, pal.column);
+                px(cx + 10, archTopY + 3, span - 10, 4, pal.column);
+              }
+            });
+
+            const whaleBob1 = (step % 2 === 0) ? 0 : 2;
+            const whaleBob2 = (step % 2 === 0) ? 2 : 0;
+
+            const drawWhale = (wx, wy, scale) => {
+              const bw = Math.round(28 * scale);
+              const bh = Math.round(8 * scale);
+              px(wx, wy, bw, bh, pal.whaleDark);
+              px(wx + Math.round(2 * scale), wy + bh - Math.round(3 * scale), bw - Math.round(7 * scale), Math.round(3 * scale), pal.whaleBelly);
+              px(wx + Math.round(4 * scale), wy + bh - Math.round(2 * scale), bw - Math.round(11 * scale), 1, pal.whaleDark);
+              px(wx + bw, wy - Math.round(2 * scale), Math.round(5 * scale), Math.round(3 * scale), pal.whaleDark);
+              px(wx + bw + Math.round(2 * scale), wy - Math.round(4 * scale), Math.round(4 * scale), Math.round(2 * scale), pal.whaleDark);
+              px(wx + Math.round(9 * scale), wy + bh, Math.round(5 * scale), Math.round(3 * scale), pal.whaleDark);
+            };
+
+            drawWhale(136, 72 + whaleBob1, 1);
+            drawWhale(194, 34 + whaleBob2, 1.45);
+
+            px(0, floorY - 12, w, h - floorY + 12, pal.water);
+            colPositions.forEach((cx) => {
+              px(cx, floorY - 12, 5, h - floorY + 12, pal.waterReflect);
+            });
+          }
+        },
+
+        sunsetCabin: {
+          label: 'Закат у хижины',
+          getPalette(isDark) {
+            return isDark ? {
+              ink: '#f5dce0',
+              charFill: '#2e2026',
+              paper: '#fcf2f4',
+              accent: '#d98a7c',
+              wood: '#8c5347',
+              skyTop: '#3d2633',
+              skyMid: '#5e3540',
+              skyGold: '#8f5646',
+              sun: '#fce8d5',
+              mountainFar: '#593747',
+              mountainNear: '#3b2431',
+              fog: '#784e5a',
+              pineDark: '#1b151a',
+              pineSun: '#d48246',
+              cabinWall: '#4d261d',
+              cabinWindow: '#ffa447',
+              lake: '#242b33',
+              lakeReflect: '#d48246',
+              ground: '#171216'
+            } : {
+              ink: '#361f27',
+              charFill: '#e3b8ba',
+              paper: '#fff7f5',
+              accent: '#b85d43',
+              wood: '#783c2c',
+              skyTop: '#f2a2ac',
+              skyMid: '#f7beb2',
+              skyGold: '#fce0b6',
+              sun: '#fffaf0',
+              mountainFar: '#c77d8e',
+              mountainNear: '#8f5064',
+              fog: '#dba8b2',
+              pineDark: '#261f24',
+              pineSun: '#eb9947',
+              cabinWall: '#59291e',
+              cabinWindow: '#ffae42',
+              lake: '#495866',
+              lakeReflect: '#f5aa69',
+              ground: '#241a1e'
+            };
+          },
+          drawBackground(ctx, w, h, floorY, pal, step) {
+            const px = (x, y, rw, rh, color) => {
+              ctx.fillStyle = color;
+              ctx.fillRect(Math.round(x), Math.round(y), Math.round(rw), Math.round(rh));
+            };
+
+            px(0, 0, w, 24, pal.skyTop);
+            px(0, 24, w, 24, pal.skyMid);
+            px(0, 48, w, 28, pal.skyGold);
+
+            px(66, 44, 24, 16, pal.sun);
+            px(62, 48, 32, 10, pal.sun);
+
+            const drawHill = (peakX, peakY, halfW, baseY, color, sunSideColor = null) => {
+              const rows = baseY - peakY;
+              for (let r = 0; r < rows; r += 2) {
+                const span = Math.floor((r / rows) * halfW);
+                px(peakX - span, peakY + r, span * 2, 2, color);
+                if (sunSideColor && span > 4) {
+                  px(peakX - span, peakY + r, Math.floor(span * 0.48), 2, sunSideColor);
+                }
+              }
+            };
+
+            drawHill(54, 38, 62, floorY - 34, pal.mountainFar);
+            drawHill(114, 48, 54, floorY - 34, pal.mountainFar);
+            drawHill(256, 24, 88, floorY - 34, pal.mountainNear, pal.pineSun);
+
+            px(0, floorY - 42, w, 12, pal.fog);
+
+            const drawSunsetPine = (cx, baseY, height, lit) => {
+              px(cx, baseY - height, 2, height, pal.pineDark);
+              const tiers = Math.floor(height / 5);
+              for (let t = 0; t < tiers; t++) {
+                const ty = baseY - height + 3 + t * 5;
+                const tw = 3 + t * 2;
+                const leftX = cx - Math.floor(tw / 2) + 1;
+                px(leftX, ty, tw, 3, pal.pineDark);
+                if (lit && tw >= 5) {
+                  px(leftX, ty, Math.ceil(tw * 0.45), 2, pal.pineSun);
+                }
+              }
+            };
+
+            drawSunsetPine(154, floorY - 26, 36, false);
+            drawSunsetPine(172, floorY - 26, 44, true);
+            drawSunsetPine(190, floorY - 26, 52, true);
+            drawSunsetPine(246, floorY - 26, 58, true);
+            drawSunsetPine(264, floorY - 26, 66, true);
+            drawSunsetPine(278, floorY - 26, 52, false);
+
+            px(142, floorY - 27, w - 142, 4, pal.pineDark);
+            const cabX = 204;
+            const cabY = floorY - 41;
+            px(cabX, cabY + 5, 28, 9, pal.cabinWall);
+            px(cabX - 2, cabY + 3, 32, 3, pal.pineDark);
+            px(cabX + 2, cabY + 1, 24, 2, pal.pineDark);
+            px(cabX + 21, cabY - 4, 3, 6, pal.cabinWall);
+            const smokeShift = (step % 2 === 0) ? 0 : 2;
+            px(cabX + 21 + smokeShift, cabY - 9, 4, 3, pal.fog);
+            px(cabX + 22 - smokeShift, cabY - 14, 5, 3, pal.fog);
+            px(cabX + 23 + smokeShift, cabY - 19, 4, 2, pal.fog);
+            px(cabX + 14, cabY + 7, 4, 4, pal.cabinWindow);
+
+            px(0, floorY - 23, w, 23, pal.lake);
+            const shimmer = (step % 2 === 0) ? 0 : 2;
+            for (let row = 0; row < 16; row += 4) {
+              const rw = 26 - row;
+              px(196 + shimmer - Math.floor(row * 0.4), floorY - 20 + row, rw, 2, pal.lakeReflect);
+              px(236 - shimmer, floorY - 18 + row, rw + 6, 2, pal.lakeReflect);
+            }
+
+            px(0, floorY - 8, Math.floor(w * 0.56), 8, pal.ground);
+            px(0, floorY, w, h - floorY, pal.ground);
+          }
+        }
+      };
+
+      function applySceneTheme(sceneKey) {
+        if (!SceneThemes[sceneKey]) return;
+        currentSceneKey = sceneKey;
+        VALID_SCENES.forEach(key => {
+          if (key !== 'study') {
+            widgetEl.classList.toggle(`scene-${key}`, sceneKey === key);
+          }
+        });
+
+        sceneOptionBtns.forEach(btn => {
+          const isMatch = btn.getAttribute('data-scene') === sceneKey;
+          btn.classList.toggle('active', isMatch);
+          const check = btn.querySelector('.scene-check');
+          if (check) check.textContent = isMatch ? '✓' : '';
+        });
+
+        try {
+          localStorage.setItem('writers_room_companion_scene', sceneKey);
+        } catch (e) {}
+      }
+
+      sceneOptionBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          applySceneTheme(btn.getAttribute('data-scene'));
+          settingsPopover.classList.add('hidden');
+        });
+      });
+
+      btnMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+        settingsPopover.classList.toggle('hidden');
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!settingsPopover.contains(e.target) && e.target !== btnMenu) {
+          settingsPopover.classList.add('hidden');
+        }
+      });
+
+      function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          canvas.width = Math.floor(rect.width);
+          canvas.height = Math.floor(rect.height);
+        }
+      }
+
+      function setActivity(newState) {
+        activityState = newState;
+        const isWorking = (newState === 'writing' || newState === 'erasing');
+        stateLabelEl.textContent = isWorking ? '· работает' : '· в задумчивости';
+
+        clearTimeout(idleTimer);
+        if (isWorking) {
+          idleTimer = setTimeout(() => {
+            activityState = 'thinking';
+            stateLabelEl.textContent = '· в задумчивости';
+          }, 1300);
+        }
+      }
+
+      function handleEditorInput(e) {
+        const currentLen = editor.textContent.length;
+        const inputType = e && e.inputType ? e.inputType : '';
+
+        if (inputType.startsWith('delete') || currentLen < prevTextLength) {
+          setActivity('erasing');
+        } else if (currentLen > prevTextLength || inputType.startsWith('insert')) {
+          setActivity('writing');
+        }
+        prevTextLength = currentLen;
+      }
+
+      function resetLengthTracker() {
+        prevTextLength = editor.textContent.length;
+      }
+
+      function drawScene(timestamp) {
+        const w = canvas.width;
+        const h = canvas.height;
+        if (!w || !h) return;
+
+        const stepDuration = (activityState === 'thinking') ? 1050 : 520;
+        if (!lastFrameTime || (timestamp - lastFrameTime) >= stepDuration) {
+          animStep += 1;
+          lastFrameTime = timestamp;
+        }
+
+        ctx.clearRect(0, 0, w, h);
+        const isDark = document.body.classList.contains('theme-dark');
+        const scene = SceneThemes[currentSceneKey] || SceneThemes.study;
+        const pal = scene.getPalette(isDark);
+        const floorY = h - 18;
+
+        scene.drawBackground(ctx, w, h, floorY, pal, animStep);
+
+        const deskX = 20;
+        const deskTopY = floorY - 16;
+        const { gramX } = drawDeskAndGramophone(ctx, deskX, deskTopY, pal, animStep);
+
+        if (GramophonePlayer.isPlaying()) {
+          if (!lastNoteSpawnTime || (timestamp - lastNoteSpawnTime) >= 2400) {
+            notes.push({
+              x: gramX + 12,
+              y: deskTopY - 21,
+              baseX: gramX + 12,
+              phase: Math.random() * Math.PI * 2,
+              vy: -0.16,
+              life: 165
+            });
+            lastNoteSpawnTime = timestamp;
+          }
+        }
+
+        const px = (x, y, rw, rh, color = pal.ink) => {
+          ctx.fillStyle = color;
+          ctx.fillRect(Math.round(x), Math.round(y), Math.round(rw), Math.round(rh));
+        };
+
+        for (let i = notes.length - 1; i >= 0; i--) {
+          const n = notes[i];
+          n.y += n.vy;
+          n.phase += 0.025;
+          n.x = n.baseX + Math.sin(n.phase) * 3.5;
+          n.life -= 1;
+          if (n.life <= 0) {
+            notes.splice(i, 1);
+            continue;
+          }
+          px(n.x, n.y, 3, 2, pal.ink);
+          px(n.x + 2, n.y - 4, 1, 5, pal.ink);
+          px(n.x + 3, n.y - 4, 2, 1, pal.ink);
+        }
+
+        const skin = CharacterSkins[currentSkinKey] || CharacterSkins.pixelWriter;
+        skin.draw(ctx, deskX, deskTopY, activityState, animStep, pal);
+      }
+
+      function loop(timestamp) {
+        drawScene(timestamp || performance.now());
+        animFrameId = requestAnimationFrame(loop);
+      }
+
+      canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const hit = mx >= gramophoneHitbox.x && mx <= gramophoneHitbox.x + gramophoneHitbox.w &&
+                    my >= gramophoneHitbox.y && my <= gramophoneHitbox.y + gramophoneHitbox.h;
+        isGramophoneHovered = hit;
+        canvas.style.cursor = hit ? 'pointer' : 'default';
+      });
+
+      canvas.addEventListener('mouseleave', () => {
+        isGramophoneHovered = false;
+        canvas.style.cursor = 'default';
+      });
+
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const hit = mx >= gramophoneHitbox.x && mx <= gramophoneHitbox.x + gramophoneHitbox.w &&
+                    my >= gramophoneHitbox.y && my <= gramophoneHitbox.y + gramophoneHitbox.h;
+        if (hit) {
+          GramophonePlayer.toggleDrawer();
+        }
+      });
+
+      btnToggleWidget.addEventListener('click', () => {
+        const willShow = widgetEl.classList.contains('hidden');
+        widgetEl.classList.toggle('hidden', !willShow);
+        btnToggleWidget.classList.toggle('active-toggle', willShow);
+        if (willShow) {
+          resizeCanvas();
+        }
+      });
+
+      btnCloseWidget.addEventListener('click', () => {
+        widgetEl.classList.add('hidden');
+        btnToggleWidget.classList.remove('active-toggle');
+        settingsPopover.classList.add('hidden');
+      });
+
+      window.addEventListener('resize', resizeCanvas);
+
+      function init() {
+        applySceneTheme(currentSceneKey);
+        resizeCanvas();
+        resetLengthTracker();
+        if (!animFrameId) animFrameId = requestAnimationFrame(loop);
+      }
+
+      return {
+        init,
+        handleEditorInput,
+        setActivity,
+        resetLengthTracker,
+        registerSkin(key, skinDefinition) {
+          CharacterSkins[key] = skinDefinition;
+          currentSkinKey = key;
+        },
+        registerScene(key, sceneDefinition) {
+          SceneThemes[key] = sceneDefinition;
+          applySceneTheme(key);
+        }
+      };
+    })();
+
+    // ==========================================================================
+    // МОДУЛЬ ГРАММОФОНА (АУДИОПЛЕЕР И ПОСТОЯННОЕ ХРАНЕНИЕ ПЛЕЙЛИСТА В INDEXEDDB)
+    // ==========================================================================
+    const GramophonePlayer = (() => {
+      const drawerEl = document.getElementById('gramophone-drawer');
+      const btnToggleDrawer = document.getElementById('btn-toggle-gramophone');
+      const settingsPopover = document.getElementById('companion-settings-popover');
+      const btnAddTracks = document.getElementById('btn-add-tracks');
+      const fileInput = document.getElementById('audio-files-input');
+      const trackTitleEl = document.getElementById('gramophone-track-title');
+      const currentTimeEl = document.getElementById('audio-current-time');
+      const durationEl = document.getElementById('audio-duration');
+      const seekBar = document.getElementById('audio-seek-bar');
+      const volumeBar = document.getElementById('audio-volume-bar');
+      const btnPrev = document.getElementById('btn-audio-prev');
+      const btnPlay = document.getElementById('btn-audio-play');
+      const btnNext = document.getElementById('btn-audio-next');
+      const playlistEl = document.getElementById('gramophone-playlist');
+
+      const audio = new Audio();
+      const STORAGE_META_KEY = 'writers_room_playlist_meta_v1';
+      const STORAGE_VOL_KEY = 'writers_room_playlist_vol_v1';
+      const DB_NAME = 'WritersRoomAudioDB';
+      const DB_STORE = 'audioFiles';
+
+      try {
+        const savedVol = localStorage.getItem(STORAGE_VOL_KEY);
+        if (savedVol !== null) {
+          volumeBar.value = savedVol;
+        }
+      } catch (e) {}
+      audio.volume = Number(volumeBar.value);
+
+      let tracks = [];
+      let currentIndex = -1;
+      let isSeeking = false;
+
+      function openAudioDB() {
+        return new Promise((resolve, reject) => {
+          if (!window.indexedDB) {
+            reject(new Error('IndexedDB недоступен'));
+            return;
+          }
+          const req = indexedDB.open(DB_NAME, 1);
+          req.onupgradeneeded = (ev) => {
+            const db = ev.target.result;
+            if (!db.objectStoreNames.contains(DB_STORE)) {
+              db.createObjectStore(DB_STORE, { keyPath: 'id' });
+            }
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function saveTrackBlobToDB(id, name, blob) {
+        try {
+          const db = await openAudioDB();
+          await new Promise((resolve, reject) => {
+            const tx = db.transaction(DB_STORE, 'readwrite');
+            tx.objectStore(DB_STORE).put({ id, name, blob });
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+          });
+        } catch (e) {}
+      }
+
+      async function deleteTrackBlobFromDB(id) {
+        try {
+          const db = await openAudioDB();
+          await new Promise((resolve, reject) => {
+            const tx = db.transaction(DB_STORE, 'readwrite');
+            tx.objectStore(DB_STORE).delete(id);
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+          });
+        } catch (e) {}
+      }
+
+      async function getTrackBlobFromDB(id) {
+        try {
+          const db = await openAudioDB();
+          return await new Promise((resolve, reject) => {
+            const tx = db.transaction(DB_STORE, 'readonly');
+            const req = tx.objectStore(DB_STORE).get(id);
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => reject(req.error);
+          });
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function persistPlaylistMetadata() {
+        try {
+          const meta = tracks.map(t => ({ id: t.id, name: t.name }));
+          localStorage.setItem(STORAGE_META_KEY, JSON.stringify({
+            tracks: meta,
+            currentIndex
+          }));
+        } catch (e) {}
+      }
+
+      async function restoreSavedPlaylist() {
+        try {
+          const raw = localStorage.getItem(STORAGE_META_KEY);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          if (!parsed || !Array.isArray(parsed.tracks) || parsed.tracks.length === 0) return;
+
+          const restored = [];
+          for (const item of parsed.tracks) {
+            const record = await getTrackBlobFromDB(item.id);
+            if (record && record.blob) {
+              restored.push({
+                id: item.id,
+                name: item.name,
+                url: URL.createObjectURL(record.blob),
+                blob: record.blob
+              });
+            }
+          }
+
+          if (restored.length > 0) {
+            tracks = restored;
+            const targetIdx = (typeof parsed.currentIndex === 'number' && parsed.currentIndex >= 0 && parsed.currentIndex < tracks.length)
+              ? parsed.currentIndex
+              : 0;
+            loadTrack(targetIdx, false);
+          }
+        } catch (e) {}
+      }
+
+      function blobToDataURL(blob) {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      async function exportPlaylistForDocument() {
+        persistPlaylistMetadata();
+        const exported = [];
+        for (const t of tracks) {
+          let dataUrl = null;
+          if (t.blob && t.blob.size <= 15 * 1024 * 1024) {
+            dataUrl = await blobToDataURL(t.blob);
+          }
+          exported.push({
+            id: t.id,
+            name: t.name,
+            dataUrl
+          });
+        }
+        return exported;
+      }
+
+      async function importPlaylistFromDocument(importedList) {
+        if (!Array.isArray(importedList) || importedList.length === 0) return;
+        for (const item of importedList) {
+          if (!item || !item.name) continue;
+          if (tracks.some(existing => existing.id === item.id || existing.name === item.name)) continue;
+
+          if (item.dataUrl) {
+            try {
+              const res = await fetch(item.dataUrl);
+              const blob = await res.blob();
+              const id = item.id || ('trk-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6));
+              await saveTrackBlobToDB(id, item.name, blob);
+              tracks.push({
+                id,
+                name: item.name,
+                url: URL.createObjectURL(blob),
+                blob
+              });
+            } catch (e) {}
+          }
+        }
+        persistPlaylistMetadata();
+        renderPlaylist();
+        if (currentIndex === -1 && tracks.length > 0) {
+          loadTrack(0, false);
+        }
+      }
+
+      function formatTime(sec) {
+        if (!isFinite(sec) || sec < 0) return '0:00';
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60);
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+      }
+
+      function toggleDrawer() {
+        drawerEl.classList.toggle('hidden');
+        if (settingsPopover) settingsPopover.classList.add('hidden');
+      }
+
+      btnToggleDrawer.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleDrawer();
+      });
+      btnAddTracks.addEventListener('click', () => fileInput.click());
+
+      fileInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        const wasEmpty = tracks.length === 0;
+        for (const file of files) {
+          const cleanName = file.name.replace(/\.[^/.]+$/, '');
+          const id = 'trk-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+          const url = URL.createObjectURL(file);
+          await saveTrackBlobToDB(id, cleanName, file);
+          tracks.push({
+            id,
+            name: cleanName,
+            url,
+            blob: file
+          });
+        }
+
+        fileInput.value = '';
+        persistPlaylistMetadata();
+        renderPlaylist();
+
+        if (wasEmpty && tracks.length > 0) {
+          loadTrack(0, true);
+        }
+        showToast(`Добавлено треков: ${files.length}`);
+      });
+
+      function loadTrack(index, autoPlay = false) {
+        if (index < 0 || index >= tracks.length) return;
+        currentIndex = index;
+        const track = tracks[currentIndex];
+        audio.src = track.url;
+        trackTitleEl.textContent = track.name;
+        seekBar.value = 0;
+        currentTimeEl.textContent = '0:00';
+        durationEl.textContent = '0:00';
+        persistPlaylistMetadata();
+        renderPlaylist();
+
+        if (autoPlay) {
+          audio.play().catch(() => {});
+        }
+        updatePlayButton();
+      }
+
+      function updatePlayButton() {
+        btnPlay.innerHTML = audio.paused
+          ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>'
+          : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>';
+      }
+
+      function renderPlaylist() {
+        playlistEl.innerHTML = '';
+        if (tracks.length === 0) {
+          playlistEl.innerHTML = '<div class="playlist-empty">Нажмите «+ Треки», чтобы выбрать музыку с компьютера</div>';
+          trackTitleEl.textContent = 'Плейлист пуст';
+          return;
+        }
+
+        tracks.forEach((trk, idx) => {
+          const row = document.createElement('div');
+          row.className = 'playlist-item' + (idx === currentIndex ? ' active' : '');
+
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'playlist-item-name';
+          nameSpan.textContent = `${idx + 1}. ${trk.name}`;
+          nameSpan.title = trk.name;
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'playlist-item-del';
+          delBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+          delBtn.title = 'Удалить трек из плейлиста';
+          delBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeTrack(idx);
+          });
+
+          row.append(nameSpan, delBtn);
+          row.addEventListener('click', () => loadTrack(idx, true));
+          playlistEl.appendChild(row);
+        });
+      }
+
+      async function removeTrack(idx) {
+        const removed = tracks[idx];
+        if (removed) {
+          URL.revokeObjectURL(removed.url);
+          await deleteTrackBlobFromDB(removed.id);
+        }
+        tracks.splice(idx, 1);
+
+        if (tracks.length === 0) {
+          audio.pause();
+          audio.removeAttribute('src');
+          currentIndex = -1;
+          seekBar.value = 0;
+          currentTimeEl.textContent = '0:00';
+          durationEl.textContent = '0:00';
+          persistPlaylistMetadata();
+          updatePlayButton();
+          renderPlaylist();
+          return;
+        }
+
+        if (idx === currentIndex) {
+          const nextIdx = Math.min(idx, tracks.length - 1);
+          loadTrack(nextIdx, !audio.paused);
+        } else if (idx < currentIndex) {
+          currentIndex -= 1;
+          persistPlaylistMetadata();
+          renderPlaylist();
+        } else {
+          persistPlaylistMetadata();
+          renderPlaylist();
+        }
+      }
+
+      btnPlay.addEventListener('click', () => {
+        if (tracks.length === 0) {
+          fileInput.click();
+          return;
+        }
+        if (currentIndex === -1) {
+          loadTrack(0, true);
+          return;
+        }
+        if (audio.paused) {
+          audio.play().catch(() => {});
+        } else {
+          audio.pause();
+        }
+        updatePlayButton();
+      });
+
+      btnPrev.addEventListener('click', () => {
+        if (tracks.length === 0) return;
+        const prevIdx = (currentIndex - 1 + tracks.length) % tracks.length;
+        loadTrack(prevIdx, true);
+      });
+
+      btnNext.addEventListener('click', () => {
+        if (tracks.length === 0) return;
+        const nextIdx = (currentIndex + 1) % tracks.length;
+        loadTrack(nextIdx, true);
+      });
+
+      volumeBar.addEventListener('input', (e) => {
+        audio.volume = Number(e.target.value);
+        try {
+          localStorage.setItem(STORAGE_VOL_KEY, String(audio.volume));
+        } catch (err) {}
+      });
+
+      seekBar.addEventListener('mousedown', () => { isSeeking = true; });
+      seekBar.addEventListener('touchstart', () => { isSeeking = true; }, { passive: true });
+
+      seekBar.addEventListener('input', (e) => {
+        if (isFinite(audio.duration)) {
+          const previewTime = (Number(e.target.value) / 100) * audio.duration;
+          currentTimeEl.textContent = formatTime(previewTime);
+        }
+      });
+
+      const commitSeek = (e) => {
+        if (isFinite(audio.duration)) {
+          audio.currentTime = (Number(e.target.value) / 100) * audio.duration;
+        }
+        isSeeking = false;
+      };
+      seekBar.addEventListener('change', commitSeek);
+      seekBar.addEventListener('mouseup', () => { isSeeking = false; });
+      seekBar.addEventListener('touchend', () => { isSeeking = false; });
+
+      audio.addEventListener('loadedmetadata', () => {
+        durationEl.textContent = formatTime(audio.duration);
+      });
+
+      audio.addEventListener('timeupdate', () => {
+        if (!isSeeking && isFinite(audio.duration) && audio.duration > 0) {
+          seekBar.value = (audio.currentTime / audio.duration) * 100;
+          currentTimeEl.textContent = formatTime(audio.currentTime);
+        }
+      });
+
+      audio.addEventListener('play', updatePlayButton);
+      audio.addEventListener('pause', updatePlayButton);
+      audio.addEventListener('ended', () => {
+        if (tracks.length > 0) {
+          const nextIdx = (currentIndex + 1) % tracks.length;
+          loadTrack(nextIdx, true);
+        }
+      });
+
+      restoreSavedPlaylist();
+
+      return {
+        toggleDrawer,
+        isPlaying: () => !audio.paused && !!audio.src,
+        exportPlaylistForDocument,
+        importPlaylistFromDocument
+      };
+    })();
+
+    // ==========================================================================
+    // ЗАПУСК ПЕРВОЙ ВКЛАДКИ И ВИДЖЕТА ПОМОЩНИКА
+    // ==========================================================================
+    const initialHtml = `
+      <h2>Глава первая. Ночной разговор</h2>
+      <p data-tag-id="tag-1" data-tag-name="Важное" style="--tag-color: #ef4444;">Выделите любой фрагмент текста и нажмите кнопку <b>A</b> на верхней панели (или выберите цвет по правому клику мыши), чтобы окрасить именно выделенный кусок или сбросить цвет после вставки из другого редактора.</p>
+      <div class="doc-instance" data-instance="true" data-tag-id="tag-2" data-tag-name="Идея" style="--tag-color: #3b82f6;">
+        <p>— Этот диалог из трёх реплик объединён в единый инстанс.</p>
+        <p>— При нажатии «Упорядочить» он не рассыплется на отдельные строки, а переместится целиком как одна сцена.</p>
+        <p>— Чтобы создать такой блок, выделите несколько абзацев и нажмите «Инстанс» или выберите «Обернуть в инстанс» по ПКМ.</p>
+      </div>
+      <p>Нажмите кнопку <b>Сохранить</b> на верхней панели (или <b>Ctrl+S</b>), чтобы сохранить рукопись в чистый <i>.txt</i> по умолчанию или выбрать другой формат: <i>.tdoc</i> (с тегами и инстансами), <i>.rtf</i> для Google Docs / Word, <i>.html</i> или копирование в буфер обмена.</p>
+    `;
+
+    const initialTab = createTabObject('Новый файл', initialHtml);
+    tabs.push(initialTab);
+    switchToTab(initialTab.id);
+
+    window.addEventListener('load', () => {
+      CompanionWidget.init();
+    });
+  </script>
+</body>
+</html>
